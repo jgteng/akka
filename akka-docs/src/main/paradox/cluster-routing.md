@@ -1,5 +1,7 @@
 # Cluster Aware Routers
 
+# 集群感知路由器
+
 All @ref:[routers](routing.md) can be made aware of member nodes in the cluster, i.e.
 deploying new routees or looking up routees on nodes in the cluster.
 When a node becomes unreachable or leaves the cluster the routees of that node are
@@ -7,10 +9,18 @@ automatically unregistered from the router. When new nodes join the cluster, add
 routees are added to the router, according to the configuration. Routees are also added
 when a node becomes reachable again, after having been unreachable.
 
+所有 @ref:[路由器](routing.md) 知道集群中的成员节点，即在集群中的节点上部署新路由或查找路由。当节点无法访问或离开集群时，
+该节点的路由将自动从路由器中注销。当新节点加入集群，根据配置将期路由加入路由器。当节点从无法访问后再次变为可访问时，
+也会添加路由。
+
 Cluster aware routers make use of members with status [WeaklyUp](#weakly-up) if that feature
 is enabled.
 
+如果 [WeaklyUp](#weakly-up) 特性已启用，则集群感知路由器也可使用这个状态的成员。
+
 There are two distinct types of routers.
+
+有两种不同类型的路由器。
 
  * **Group - router that sends messages to the specified path using actor selection**
 The routees can be shared among routers running on different nodes in the cluster.
@@ -24,9 +34,18 @@ will not be shared among the routers. One example of a use case for this type of
 is a single master that coordinates jobs and delegates the actual work to routees running
 on other nodes in the cluster.
 
+ * **Group - 使用actor selection将消息发送给指定路径的路由器**，这些路由可以在集群中的不同节点上运行、共享。
+此类路由器的用例的一个示例是在群集中的某些后端节点上运行的服务，并由在群集中的前端节点上运行的路由器使用。
+ * **Pool - 路由器将创建路由作为子节点，并在远程节点上部署它们**。每个路由器都有自己的routee实例。例如，
+如果在10个节点的集群中，每个路由器在3个节点上启动，则如果路由器配置为每个节点使用一个实例，则总共将有30个路由（routee）。
+不同路由器创建的路由不会在路由器之间共享。这种类型的路由器的用例的一个示例是单个主机，
+其协调作业并将实际工作委托给在集群中的其他节点上运行的路由。
+
 ## Dependency
 
 To use Cluster aware routers, you must add the following dependency in your project:
+
+要使用集群感知路由器，你必须在你的项目中添加以下依赖项：
 
 @@dependency[sbt,Maven,Gradle] {
   group="com.typesafe.akka"
@@ -36,8 +55,12 @@ To use Cluster aware routers, you must add the following dependency in your proj
 
 ## Router with Group of Routees
 
+## 路由器与路由组
+
 When using a `Group` you must start the routee actors on the cluster member nodes.
 That is not done by the router. The configuration for a group looks like this::
+
+使用`Group`时，你必须在集群成员节点上（先）启动routee actor，路由器不会启动它管理的routee。组的配置如下所示：
 
 ```
 akka.actor.deployment {
@@ -57,6 +80,8 @@ akka.actor.deployment {
 
 The routee actors should be started as early as possible when starting the actor system, because
 the router will try to use them as soon as the member status is changed to 'Up'.
+
+应在启动actor系统时尽量早的启动routee actor，因为路由器将在成员状态变为`Up`时使用它们。
 
 @@@
 
