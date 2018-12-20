@@ -312,13 +312,21 @@ if the message should be sent to a matching path on the self node or not.
 
 ## DistributedPubSub Extension
 
+## DistributedPubSub扩展
+
 In the example above the mediator is started and accessed with the `akka.cluster.pubsub.DistributedPubSub` extension.
 That is convenient and perfectly fine in most cases, but it can be good to know that it is possible to
 start the mediator actor as an ordinary actor and you can have several different mediators at the same
 time to be able to divide a large number of actors/topics to different mediators. For example you might
 want to use different cluster roles for different mediators.
 
+在上面的示例中，通过`akka.cluster.pubsub.DistributedPubSub`扩展启动和访问中介。大多数情况下这种方式完美且好用，但是，
+最好知道做为普通actor启动中介actor时可以同时拥有多个不同的中介，以将大量不同的actor/topic分派给不同的中介。
+例如：你可能希望在不同的集群角色应用不同的中介。
+
 The `DistributedPubSub` extension can be configured with the following properties:
+
+可以使用以下属性配置`DistributedPubSub`扩展。
 
 @@snip [reference.conf](/akka-cluster-tools/src/main/resources/reference.conf) { #pub-sub-ext-config }
 
@@ -326,13 +334,23 @@ It is recommended to load the extension when the actor system is started by defi
 `akka.extensions` configuration property. Otherwise it will be activated when first used
 and then it takes a while for it to be populated.
 
+建议在actor系统启动时通过在`akka.extensions`配置属性中定义该扩展来载入。否则，它将在第一次使用时被激活，
+然后需要一段时间才能被填充。
+
 ```
 akka.extensions = ["akka.cluster.pubsub.DistributedPubSub"]
 ```
 
 ## Delivery Guarantee
 
+## 传递保证
+
 As in @ref:[Message Delivery Reliability](general/message-delivery-reliability.md) of Akka, message delivery guarantee in distributed pub sub modes is **at-most-once delivery**.
 In other words, messages can be lost over the wire.
 
+在Akka @ref:[消息传背景可靠性](general/message-delivery-reliability.md) 一章，分布式请发布/订阅保证 **最多一次** 消息传递保证。另一种说法就是消息有可能丢失。
+
 If you are looking for at-least-once delivery guarantee, we recommend [Kafka Akka Streams integration](http://doc.akka.io/docs/akka-stream-kafka/current/home.html).
+
+如果你需要至少一次传递保证，我们建议看看 [Kafka Akka Stream集成](http://doc.akka.io/docs/akka-stream-kafka/current/home.html)。
+

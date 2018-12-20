@@ -1,36 +1,59 @@
 # Cluster Specification
 
+# 集群规范
+
 @@@ note
 
 This document describes the design concepts of Akka Cluster.
+
+本文档描述了Akka集群的设计概念
 
 @@@
 
 ## Intro
 
+## 简介
+
 Akka Cluster provides a fault-tolerant decentralized peer-to-peer based cluster
 [membership](#membership) service with no single point of failure or single point of bottleneck.
 It does this using [gossip](#gossip) protocols and an automatic [failure detector](#failure-detector).
+
+Akka集群提供基于对等的分布式容错集群 [成员](#membership) 服务，没有单点故障或单点瓶颈。
+它使用 [gossip](#gossip) 协议和自动 [故障检测](#failure-detector)来实现。
 
 Akka cluster allows for building distributed applications, where one application or service spans multiple nodes
 (in practice multiple `ActorSystem`s). See also the discussion in
 @ref:[When and where to use Akka Cluster](../cluster-usage.md#when-and-where-to-use-akka-cluster).
 
+Akka集群允许构建分布式应用程序，一个应用程序或服务跨越多个节点（实际上是多个`ActorSystem`）。可查看 [何时、何地使用Akka集群](../cluster-usage.md#when-and-where-to-use-akka-cluster) 中的讨论。
+
 ## Terms
+
+## 条款
 
 **node**
 : A logical member of a cluster. There could be multiple nodes on a physical
 machine. Defined by a *hostname:port:uid* tuple.
 
+**节点**
+: 集群中的一个逻辑成员。在一个物理机器上可以有多个节点。使用 **hostname:port:uid** 元组定义。
+
 **cluster**
 : A set of nodes joined together through the [membership](#membership) service.
+
+**集群**
+: 通过成员服务连接在一起的一组节点。
 
 **leader**
 : A single node in the cluster that acts as the leader. Managing cluster convergence
 and membership state transitions.
 
+**领导**
+: 集群中充当领导者的单个节点。管理集群聚合和成员状态转换。
 
 ## Membership
+
+## 成员
 
 A cluster is made up of a set of member nodes. The identifier for each node is a
 `hostname:port:uid` tuple. An Akka application can be distributed over a cluster with
@@ -38,6 +61,10 @@ each node hosting some part of the application. Cluster membership and the actor
 on that node of the application are decoupled. A node could be a member of a
 cluster without hosting any actors. Joining a cluster is initiated
 by issuing a `Join` command to one of the nodes in the cluster to join.
+
+集群由一组成员节点组成。每个节点的标识符是`hostname:port:uid`元组。可以在集群上分布Akka应用程序，每个节点托管应用程序的某些部分。
+集群成员资格和在应用程序的该节点上运行的actor被解耦。节点可以是集群的成员而无需托管任何actor。
+通过向要加入的集群中的一个节点发出Join命令来启动加入集群。
 
 The node identifier internally also contains a UID that uniquely identifies this
 actor system instance at that `hostname:port`. Akka uses the UID to be able to
@@ -47,9 +74,16 @@ system with the same `hostname:port` to a cluster you have to stop the actor sys
 and start a new one with the same `hostname:port` which will then receive a different
 UID.
 
+节点标识符内部还包含一个UID，该UID在该`hostname:port`处唯一标识此actor系统实例。Akka使用UID能够可靠地触发远程死亡监视。
+这意味着同一个actor系统一旦从该集群中删除，就永远不会再次加入集群。要将具有相同`hostname:port`的actor系统重新连接到集群，
+您必须停止actor系统并启动具有相同`hostname:port`的新系统，然后将收到不同的UID。
+
 The cluster membership state is a specialized [CRDT](http://hal.upmc.fr/docs/00/55/55/88/PDF/techreport.pdf), which means that it has a monotonic
 merge function. When concurrent changes occur on different nodes the updates can always be
 merged and converge to the same end result.
+
+集群成员资格状态是一个专用的 [CRDT](http://hal.upmc.fr/docs/00/55/55/88/PDF/techreport.pdf)，这意味着它具有单调合并功能。
+当在不同节点上发生并发更改时，总会合并更新并收敛到相同的最终结果。
 
 ### Gossip
 
@@ -59,16 +93,28 @@ Cluster membership is communicated using a [Gossip Protocol](http://en.wikipedia
 state of the cluster is gossiped randomly through the cluster, with preference to
 members that have not seen the latest version.
 
+Akka集群成员使用Amazon的 [Dynamo](http://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf) 系统，
+特别是 Basho's 的 [Riak](http://basho.com/technology/architecture/) 分布式数据库使用的方法。集群成员间使用 [Gossip](http://en.wikipedia.org/wiki/Gossip_protocol) 协议通信。
+其中集群的当前状态通过集群随机的 gossiped，优先选择没有看到最新版本的成员。
+
 #### Vector Clocks
+
+#### 向量时钟
 
 [Vector clocks](http://en.wikipedia.org/wiki/Vector_clock) are a type of data structure and algorithm for generating a partial
 ordering of events in a distributed system and detecting causality violations.
+
+向量时钟是一种数据结构和算法，用于在分布式系统中生成事件的部分排序并检测因果关系违规。
 
 We use vector clocks to reconcile and merge differences in cluster state
 during gossiping. A vector clock is a set of (node, counter) pairs. Each update
 to the cluster state has an accompanying update to the vector clock.
 
+我们使用向量时钟来协调和合并闲聊期间集群状态的差异。向量时钟是一组（节点，计数器）对。对集群状态的每次更新都伴随着向量时钟的更新。
+
 #### Gossip Convergence
+
+#### Gossip收敛
 
 Information about the cluster converges locally at a node at certain points in time.
 This is when a node can prove that the cluster state he is observing has been observed
