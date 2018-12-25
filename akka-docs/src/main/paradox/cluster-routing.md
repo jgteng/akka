@@ -90,11 +90,20 @@ actors to which the messages will be forwarded to by the router. The path should
 Messages will be forwarded to the routees using @ref:[ActorSelection](actors.md#actorselection), so the same delivery semantics should be expected.
 It is possible to limit the lookup of routees to member nodes tagged with a particular set of roles by specifying `use-roles`.
 
+消息将被路由器转发给从`routees.paths`中定义的actor路径中被选中的actor。该路径不应该包含协议和地址信息，
+因为它们是从集群成员中动态检索获得的。消息将被使用 @ref:[ActorSelection](actors.md#actorselection) 重定向到 routees，
+因此应该期望使用相同的传递语义。通过指定`use-roles`可以将routees查找限制为标记有特定角色的成员节点。
+
 `max-total-nr-of-instances` defines total number of routees in the cluster. By default `max-total-nr-of-instances`
 is set to a high value (10000) that will result in new routees added to the router when nodes join the cluster.
 Set it to a lower value if you want to limit total number of routees.
 
+`max-total-nr-of-instances`定义了集群中路由总数（每个路由器）。`max-total-nr-of-instances`默认值为10000，
+这将使节点加入集群时新的路由被添加到路由器。如果要限制路由总数，请将其设置为较低的值。
+
 The same type of router could also have been defined in code:
+
+也可以在代码中定义相似类型的路由器：
 
 Scala
 :  @@snip [StatsService.scala](/akka-cluster-metrics/src/multi-jvm/scala/akka/cluster/metrics/sample/StatsService.scala) { #router-lookup-in-code }
@@ -104,10 +113,16 @@ Java
 
 See @ref:[reference configuration](general/configuration.md#config-akka-cluster) for further descriptions of the settings.
 
+有关设置的进一步说明，请参阅 @ref:[参考配置](general/configuration.md#config-akka-cluster)。
+
 ### Router Example with Group of Routees
+
+### 具有路由组的路由器示例
 
 Let's take a look at how to use a cluster aware router with a group of routees,
 i.e. router sending to the paths of the routees.
+
+让我们来看看如何使用一组routee的集群感知路由器，路由器（将消息）发送到routee路径（代表的actor）
 
 The example application provides a service to calculate statistics for a text.
 When some text is sent to the service it splits it into words, and delegates the task
@@ -115,7 +130,13 @@ to count number of characters in each word to a separate worker, a routee of a r
 The character count for each word is sent back to an aggregator that calculates
 the average number of characters per word when all results have been collected.
 
+这个示例提供计算文本统计信息的服务。当一些文本被发送到服务时，它将其拆分为单词，
+并由路由器将每个词的字符计数任务委托给单独的工作者routee。每个单词的字符计数将被发送回聚合器，
+由该聚合器收集所有结果后计算出单词的平均字符数。
+
 Messages:
+
+消息：
 
 Scala
 :  @@snip [StatsMessages.scala](/akka-cluster-metrics/src/multi-jvm/scala/akka/cluster/metrics/sample/StatsMessages.scala) { #messages }
@@ -125,6 +146,8 @@ Java
 
 The worker that counts number of characters in each word:
 
+计算每个单词中字符个数的工作者：
+
 Scala
 :  @@snip [StatsWorker.scala](/akka-cluster-metrics/src/multi-jvm/scala/akka/cluster/metrics/sample/StatsWorker.scala) { #worker }
 
@@ -132,6 +155,8 @@ Java
 :  @@snip [StatsWorker.java](/akka-docs/src/test/java/jdocs/cluster/StatsWorker.java) { #worker }
 
 The service that receives text from users and splits it up into words, delegates to workers and aggregates:
+
+从用户处接收文本并拆分为单词，委托给worker和聚合结果的服务：
 
 @@@ div { .group-scala }
 
@@ -148,8 +173,13 @@ The service that receives text from users and splits it up into words, delegates
 
 Note, nothing cluster specific so far, just plain actors.
 
+注意，目前为止并没有指定集群，只是普通的actor。
+
 All nodes start `StatsService` and `StatsWorker` actors. Remember, routees are the workers in this case.
 The router is configured with `routees.paths`::
+
+在所有节点上启动`StatsService`和`StatsWorker` actor。记住，在这种情况下routee（路由）是worker。
+由路由器通过`routees.paths`配置：
 
 ```
 akka.actor.deployment {
@@ -168,6 +198,8 @@ akka.actor.deployment {
 This means that user requests can be sent to `StatsService` on any node and it will use
 `StatsWorker` on all nodes.
 
+这意味着可以将用户请求发送到任何节点上的`StatsService`，并且它（`StatsService`）将使用所有节点上的`StatsWorker`。
+
 The easiest way to run **Router Example with Group of Routees** example yourself is to download the ready to run
 @scala[@extref[Akka Cluster Sample with Scala](ecs:akka-samples-cluster-scala)]
 @java[@extref[Akka Cluster Sample with Java](ecs:akka-samples-cluster-java)]
@@ -175,10 +207,17 @@ together with the tutorial. It contains instructions on how to run the **Router 
 The source code of this sample can be found in the
 @scala[@extref[Akka Samples Repository](samples:akka-sample-cluster-scala)]@java[@extref[Akka Samples Repository](samples:akka-sample-cluster-java)].
 
+使用 **使用路由组的路由器** 最简单的方法是下载带有教程的 @extref[Akka集群示例使用Scala](ecs:akka-samples-cluster-scala) 。
+它包含有关如何使用 **使用路由组的路由器** 示例的说明。该救命的源码可以在 @extref[Akka示例仓库](samples-akka-sample-cluster-scala) 找到。
+
 ## Router with Pool of Remote Deployed Routees
+
+## 具有远程部署路由池的路由器
 
 When using a `Pool` with routees created and deployed on the cluster member nodes
 the configuration for a router looks like this::
+
+使用在集群成员节点上创建并部署了路由的池时，路由器的配置如下所示：
 
 ```
 akka.actor.deployment {
@@ -197,12 +236,20 @@ akka.actor.deployment {
 It is possible to limit the deployment of routees to member nodes tagged with a particular set of roles by
 specifying `use-roles`.
 
+通过指定`use-roles`，可以将路由部署限制为标记有特定角色的成员节点。
+
 `max-total-nr-of-instances` defines total number of routees in the cluster, but the number of routees
 per node, `max-nr-of-instances-per-node`, will not be exceeded. By default `max-total-nr-of-instances`
 is set to a high value (10000) that will result in new routees added to the router when nodes join the cluster.
 Set it to a lower value if you want to limit total number of routees.
 
+`max-total-nr-of-instances`定义集群中的路由总数，但不会超过每个节点的路由数量`max-nr-of-instances-per-node`。
+默认情况下，`max-total-nr-of-instances`设置为高值（10000），这将导致在节点加入群集时将新路由添加到路由器。
+如果要限制路线总数，请将其设置为较低的值。
+
 The same type of router could also have been defined in code:
+
+也可以在代码中定义相同类型的路由器：
 
 Scala
 :  @@snip [StatsService.scala](/akka-cluster-metrics/src/multi-jvm/scala/akka/cluster/metrics/sample/StatsService.scala) { #router-deploy-in-code }
@@ -214,9 +261,14 @@ See @ref:[reference configuration](general/configuration.md#config-akka-cluster)
 
 ### Router Example with Pool of Remote Deployed Routees
 
+### 具有远程部署路由池的路由器示例
+
 Let's take a look at how to use a cluster aware router on single master node that creates
 and deploys workers. To keep track of a single master we use the @ref:[Cluster Singleton](cluster-singleton.md)
 in the cluster-tools module. The `ClusterSingletonManager` is started on each node:
+
+我们来看看如何在创建和部署工作线程的单个主节点上使用群集感知路由器。为了跟踪单个主服务器，我们使用集群工具模块中的
+@ref[集群单例](cluster-singleton.md)。`ClusterSingletonManager`在每个节点上启动：
 
 Scala
 :   @@@vars
@@ -236,6 +288,9 @@ Java
 We also need an actor on each node that keeps track of where current single master exists and
 delegates jobs to the `StatsService`. That is provided by the `ClusterSingletonProxy`:
 
+我们还需要每个节点上的一个actor来跟踪当前单个master存在的位置，并将作业委托给`StatsService`。
+这是由`ClusterSingletonProxy`提供的：
+
 Scala
 :   @@@vars
     ```
@@ -253,7 +308,12 @@ Java
 The `ClusterSingletonProxy` receives text from users and delegates to the current `StatsService`, the single
 master. It listens to cluster events to lookup the `StatsService` on the oldest node.
 
+`ClusterSingletonProxy`从用户处接收文本并委托给当前`StatsService`（单个主服务器。
+它侦听集群事件以在最旧的节点上查找`StatsService`。
+
 All nodes start `ClusterSingletonProxy` and the `ClusterSingletonManager`. The router is now configured like this::
+
+所有节点都启动`ClusterSingletonProxy`和`ClusterSingletonManager`。路由器现在配置如下：
 
 ```
 akka.actor.deployment {
@@ -276,3 +336,7 @@ together with the tutorial. It contains instructions on how to run the **Router 
 The source code of this sample can be found in the
 @scala[@extref[Akka Samples Repository](samples:akka-sample-cluster-scala)]@java[@extref[Akka Samples Repository](samples:akka-sample-cluster-java)].
 
+运行具有 **远程部署路由池的路由器** 示例的最简单方法是下载带有教程的
+@extref[Akka集群示例使用Scala](ecs:akka-samples-cluster-scala)。
+它包含有关如何运行具有 **远程部署路由池的路由器** 示例的说明。
+该示例的源代码可以在 @extref[Akka示例仓库](samples:akka-sample-cluster-scala) 中找到。
