@@ -208,7 +208,7 @@ The source code of this sample can be found in the
 @scala[@extref[Akka Samples Repository](samples:akka-sample-cluster-scala)]@java[@extref[Akka Samples Repository](samples:akka-sample-cluster-java)].
 
 使用 **使用路由组的路由器** 最简单的方法是下载带有教程的 @extref[Akka集群示例使用Scala](ecs:akka-samples-cluster-scala) 。
-它包含有关如何使用 **使用路由组的路由器** 示例的说明。该救命的源码可以在 @extref[Akka示例仓库](samples-akka-sample-cluster-scala) 找到。
+它包含有关如何使用 **使用路由组的路由器** 示例的说明。该救命的源码可以在 @extref[Akka示例仓库](samples:akka-sample-cluster-scala) 找到。
 
 ## Router with Pool of Remote Deployed Routees
 

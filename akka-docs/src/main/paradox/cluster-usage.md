@@ -817,7 +817,7 @@ The roles of the nodes is part of the membership information in `MemberEvent` th
 <a id="min-members"></a>
 ## How To Startup when Cluster Size Reached
 
-## 在启动时怎样根据集群大小达到Reached
+## 如何在达到集群大小时启动
 
 A common use case is to start actors after the cluster has been initialized,
 members have joined, and the cluster has reached a certain size.

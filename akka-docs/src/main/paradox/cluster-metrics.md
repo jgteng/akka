@@ -1,8 +1,14 @@
 # Cluster Metrics Extension
 
+# 集群度量指标扩展
+
 ## Dependency
 
+## 依赖
+
 To use Cluster Metrics Extension, you must add the following dependency in your project:
+
+要使用集群指标扩展，你必须在项目中添加以下依赖项：
 
 @@dependency[sbt,Maven,Gradle] {
   group=com.typesafe.akka
@@ -36,6 +42,8 @@ such as "Node Let-it-crash" when CPU steal time becomes excessive.
 
 Cluster members with status @ref:[WeaklyUp](cluster-usage.md#weakly-up), if that feature is enabled,
 will participate in Cluster Metrics collection and dissemination.
+
+具有状态 @ref:[WeaklyUp](cluster-usage.md#wakly-up) 的集群成员（如果启用该功能）将参与集群度量指标收集和传播。
 
 ## Metrics Collector
 
