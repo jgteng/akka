@@ -1,19 +1,28 @@
 # Multi JVM Testing
+# 多JVM测试
 
 Supports running applications (objects with main methods) and ScalaTest tests in multiple JVMs at the same time.
 Useful for integration testing where multiple systems communicate with each other.
 
+支持在多个JVM中同时运行应用程序（具有main方法的object）和ScalaTest测试。适用于多个系统相互通信的集成测试。
+
 ## Setup
+## 设置
 
 The multi-JVM testing is an sbt plugin that you can find at [https://github.com/sbt/sbt-multi-jvm](https://github.com/sbt/sbt-multi-jvm).
 To configure it in your project you should do the following steps:
 
+多JVM测试是一个sbt插件，您可以在 [https://github.com/sbt/sbt-multi-jvm](https://github.com/sbt/sbt-multi-jvm) 找到它。
+要在项目中配置它，您应该执行以下步骤：
+
 1. Add it as a plugin by adding the following to your project/plugins.sbt:
+    通过将以下内容添加到 [plugins.sbt](/project/plugins.sbt) 中将其添加为插件：
 
     @@snip [plugins.sbt](/project/plugins.sbt) { #sbt-multi-jvm }
 
 2. Add multi-JVM testing to `build.sbt` or `project/Build.scala` by enabling `MultiJvmPlugin` and 
 setting the `MultiJvm` config.
+    通过启用`MultiJvmPlugin`并设置`MultiJvm`配置，将多JVM测试添加到`build.sbt`或`project/Build.scala`。
 
     ```none
     lazy val root = (project in file("."))
@@ -24,7 +33,11 @@ setting the `MultiJvm` config.
 **Please note** that by default MultiJvm test sources are located in `src/multi-jvm/...`, 
 and not in `src/test/...`.
 
+**请注意**，默认情况下MultiJvm测试代码位于`src/multi-jvm/...`中，而不是`src/test/....`。
+
 Here is an example of a @extref[sample project](samples:akka-sample-multi-node-scala) that uses the `sbt-multi-jvm` plugin.
+
+以下是使用`sbt-multi-jvm`插件的 @extref[示例项目](samples:akka-sample-multi-node-scala) 示例。
 
 ## Running tests
 
