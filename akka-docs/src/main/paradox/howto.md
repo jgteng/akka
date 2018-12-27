@@ -26,14 +26,20 @@ Contributed by: Kaspar Fischer
 The pattern is described in [Throttling Messages in Akka 2](http://letitcrash.com/post/28901663062/throttling-messages-in-akka-2).
 
 ## Balancing Workload Across Nodes
+## 跨节点平衡工作负载
 
 Contributed by: Derek Wyatt
+
+供稿人：Derek Wyatt
 
 "Often times, people want the functionality of the BalancingDispatcher with the
 stipulation that the Actors doing the work have distinct Mailboxes on remote
 nodes. In this post we’ll explore the implementation of such a concept."
 
-The pattern is described [Balancing Workload across Nodes with Akka 2](http://letitcrash.com/post/29044669086/balancing-workload-across-nodes-with-akka-2).
+“很多时候，人们希望`BalancingDispatcher`的功能具有这样的规约：执行工作的Actors在远程节点上具有不同的邮箱。
+在这篇文章中，我们将探讨这一概念的实施。”
+
+该模式描述了 [Akka 2中跨节点工作平衡](http://letitcrash.com/post/29044669086/balancing-workload-across-nodes-with-akka-2)。
 
 ## Work Pulling Pattern to throttle and distribute work, and prevent mailbox overflow
 
@@ -167,11 +173,11 @@ Finally we are able to execute an actor and receive the results or exceptions.
 
 ## Scalable Distributed Event Sourcing and CQRS
 
-The [Lagom Framework](https://www.lagomframework.com) encodes many best practices in combining @ref:[Akka Persistence](persistence.md) and @ref:[Akka Persistence Query](persistence-query.md) 
+The [Lagom Framework](https://www.lagomframework.com) encodes many best practices in combining @ref:[Akka Persistence](persistence.md) and @ref:[Akka Persistence Query](persistence-query.md)
 with @ref:[Cluster Sharding](cluster-sharding.md) to build scalable and resilient systems with Event Sourcing and CQRS.
 
 See @java[[Managing Data Persistence](https://www.lagomframework.com/documentation/current/java/ES_CQRS.html)]
-@scala[[Managing Data Persistence](https://www.lagomframework.com/documentation/current/scala/ES_CQRS.html)] and 
-@java[[Persistent Entity](https://www.lagomframework.com/documentation/current/java/PersistentEntity.html)] 
+@scala[[Managing Data Persistence](https://www.lagomframework.com/documentation/current/scala/ES_CQRS.html)] and
+@java[[Persistent Entity](https://www.lagomframework.com/documentation/current/java/PersistentEntity.html)]
 @scala[[Persistent Entity](https://www.lagomframework.com/documentation/current/scala/PersistentEntity.html)] in the Lagom documentation.
 
