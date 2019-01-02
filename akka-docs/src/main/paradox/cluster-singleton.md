@@ -1,8 +1,12 @@
 # Cluster Singleton
 
+# 集群单例
+
 ## Dependency
 
 To use Cluster Singleton, you must add the following dependency in your project:
+
+要使用集群单例，你必需在你的项目中添加以下依赖：
 
 @@dependency[sbt,Maven,Gradle] {
   group=com.typesafe.akka
