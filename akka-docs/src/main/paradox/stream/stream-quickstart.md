@@ -1,8 +1,12 @@
 # Streams Quickstart Guide
+# Streams快速起步指南
 
 ## Dependency
+## 依赖
 
 To use Akka Streams, add the module to your project:
+
+要使用Akka Streams，添加模块到你的项目：
 
 @@dependency[sbt,Maven,Gradle] {
   group="com.typesafe.akka"
@@ -14,12 +18,19 @@ To use Akka Streams, add the module to your project:
 
 Both the Java and Scala DSLs of Akka Streams are bundled in the same JAR. For a smooth development experience, when using an IDE such as Eclipse or IntelliJ, you can disable the auto-importer from suggesting `javadsl` imports when working in Scala,
 or viceversa. See @ref:[IDE Tips](../additional/ide.md). 
+
+Akka Streams的Java和Scala DSL都捆绑在同一个JAR中。 为了获得顺畅的开发体验，在使用Eclipse或IntelliJ等IDE时，
+你可以在Scala中工作时禁用自动导入器建议使用的javadsl，反之亦然。请参阅 @ref:[IDE提示](../additional/ide.md) 。
+
 @@@
 
 ## First steps
+## 第一步
 
 A stream usually begins at a source, so this is also how we start an Akka
 Stream. Before we create one, we import the full complement of streaming tools:
+
+一个stream通常开始于一个source，所以这也是我们开始使用Akka Stream的方式。在我们创建一个之前，我们导入完整的stream工具：
 
 Scala
 :   @@snip [QuickStartDocSpec.scala](/akka-docs/src/test/scala/docs/stream/QuickStartDocSpec.scala) { #stream-imports }
@@ -29,6 +40,8 @@ Java
 
 If you want to execute the code samples while you read through the quick start guide, you will also need the following imports:
 
+如果要在阅读快速入门指南时执行代码示例，还需要以下导入：
+
 Scala
 :   @@snip [QuickStartDocSpec.scala](/akka-docs/src/test/scala/docs/stream/QuickStartDocSpec.scala) { #other-imports }
 
@@ -37,6 +50,9 @@ Java
 
 And an @scala[object]@java[class] to hold your code, for example:
 
+以及保存代码的对象，例如：
+
+
 Scala
 :   @@snip [QuickStartDocSpec.scala](/akka-docs/src/test/scala/docs/stream/QuickStartDocSpec.scala) { #main-app }
 
@@ -44,6 +60,8 @@ Java
 :   @@snip [Main.java](/akka-docs/src/test/java/jdocs/stream/Main.java) { #main-app }
 
 Now we will start with a rather simple source, emitting the integers 1 to 100:
+
+现在我们将从一个相当简单的source开始，发出整数1到100：
 
 Scala
 :   @@snip [QuickStartDocSpec.scala](/akka-docs/src/test/scala/docs/stream/QuickStartDocSpec.scala) { #create-source }
@@ -58,9 +76,14 @@ provide information about the bound port or the peer’s address). Where no
 auxiliary information is produced, the type `akka.NotUsed` is used—and a
 simple range of integers surely falls into this category.
 
+`Source`类型有两种类型化参数：第一种是此源发出的元素类型，第二种表示运行源可能产生的一些辅助值（例如，
+网络源可能提供有关绑定端口或对等端口的地址信息）。如果没有产生辅助信息，则使用类型`akka.NotUsed`，并且一个简单的整数范围肯定属于这一类。
+
 Having created this source means that we have a description of how to emit the
 first 100 natural numbers, but this source is not yet active. In order to get
 those numbers out we have to run it:
+
+创建此源后意味着我们有一个如何发出前100个自然数的描述，但此源尚未激活。为了获得这些数字，我们必须运行它：
 
 Scala
 :   @@snip [QuickStartDocSpec.scala](/akka-docs/src/test/scala/docs/stream/QuickStartDocSpec.scala) { #run-source }
