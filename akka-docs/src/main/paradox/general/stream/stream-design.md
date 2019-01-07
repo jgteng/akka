@@ -3,7 +3,7 @@
 
 It took quite a while until we were reasonably happy with the look and feel of the API and the architecture of the implementation, and while being guided by intuition the design phase was very much exploratory research. This section details the findings and codifies them into a set of principles that have emerged during the process.
 
-我们在直觉的指导下花了很长一段时间才对API的外观和感觉以及实现的架构感到相当落单，设计阶段是非常探索性的研究。
+我们在直觉的指导下花了很长一段时间才对API的观感以及实现的架构感到相当满意，设计是非常探索性的研究阶段。
 本节详细介绍了调研结果，并将其编入了一系列在此过程中出现的原则。
 
 @@@ note
@@ -54,9 +54,9 @@ One important consequence of offering only features that can be relied upon is t
  * stream cancellation will propagate upstream (e.g. from a *take* operator) leading to upstream processing steps being terminated without having processed all of their inputs
 
  * 普通用户代码可以使用 *map(...)* 运算符的一个元素，并生成一个完全不同的元素作为结果
- * 公共流操作符有意地丢弃元素，例如：`take/drop/filter/conflate/buffer/...`
+ * 公共流运算符有意地丢弃元素，例如：`take/drop/filter/conflate/buffer/...`
  * 流故障将在不等待处理完成的情况下拆除流，所有正在运行的元素都将被丢弃
- * 流取消将向上游传播（如何：*take* 操作符），导致上游处理步骤终止而不处理它们的所有输入
+ * 流取消将向上游传播（如何：*take* 运算符），导致上游处理步骤终止而不处理它们的所有输入
 
 This means that sending JVM objects into a stream that need to be cleaned up will require the user to ensure that this happens outside of the Akka Streams facilities (e.g. by cleaning them up after a timeout or when their results are observed on the stream output, or by using other means like finalizers etc.).
 
@@ -143,8 +143,8 @@ The other, and perhaps more important reason for hiding the Reactive streams int
 
 隐藏Reactive流接口的另一个也许更重要的原因可以追溯到这个解释的第一点：Reactive Streams是一个SPI的事实，
 因此很难在ad-hoc实现中“正确”。因此，Akka Streams不鼓励使用难以实现的底层基础架构，并为用户提供更简单，
-更类型安全且更强大的抽象：`GraphStages`和操作符（operators）。当然，通过使用`asPublisher`或`fromSubscriber`等方法，
-仍然（并且很容易）接受或获得流操作符的Reactive Streams（或JDK + Flow）表示。
+更类型安全且更强大的抽象：`GraphStages`和运算符（operators）。当然，通过使用`asPublisher`或`fromSubscriber`等方法，
+仍然（并且很容易）接受或获得流运算符的Reactive Streams（或JDK + Flow）表示。
 
 ## What shall users of streaming libraries expect?
 ## streaming库的用户期望什么？
@@ -158,11 +158,11 @@ We expect libraries to be built on top of Akka Streams, in fact Akka HTTP is one
  * libraries may optionally and additionally provide facilities that consume and materialize operators
 
  * 库应为其用户提供可重复使用的部分，即暴露返回operator的工厂，从而实现完全的组合性
- * 库可以选择性地和其它地提供消费和实现操作符的设施
+ * 库可以选择性地和其它地提供消费和实现运算符的设施
  
 The reasoning behind the first rule is that compositionality would be destroyed if different libraries only accepted operators and expected to materialize them: using two of these together would be impossible because materialization can only happen once. As a consequence, the functionality of a library must be expressed such that materialization can be done by the user, outside of the library’s control.
 
-第一条规则背后的原因是，如果不同的库只接受操作符并且期望实现它们，那么组合性就会被破坏：使用其中两个是不可能的，
+第一条规则背后的原因是，如果不同的库只接受运算符并且期望实现它们，那么组合性就会被破坏：使用其中两个是不可能的，
 因为实现只能发生一次。因此，必须表达库的功能，以便用户可以在库的控制之外完成实现。
 
 The second rule allows a library to additionally provide nice sugar for the common case, an example of which is the Akka HTTP API that provides a `handleWith` method for convenient materialization.

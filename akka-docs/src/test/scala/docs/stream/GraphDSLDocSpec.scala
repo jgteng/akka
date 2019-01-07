@@ -75,7 +75,7 @@ class GraphDSLDocSpec extends AkkaSpec {
     // format: OFF
     val g =
     //#graph-dsl-reusing-a-flow
-    RunnableGraph.fromGraph(GraphDSL.create(topHeadSink, bottomHeadSink)((_, _)) { implicit builder =>
+    RunnableGraph.fromGraph(GraphDSL.create(topHeadSink, bottomHeadSink)(Keep.both/*(_, _)*//*(m1, m2) => m1 -> m2*/) { implicit builder =>
       (topHS, bottomHS) =>
       import GraphDSL.Implicits._
       val broadcast = builder.add(Broadcast[Int](2))

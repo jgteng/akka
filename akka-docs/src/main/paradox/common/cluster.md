@@ -76,7 +76,7 @@ UID.
 
 节点标识符内部还包含一个UID，该UID在该`hostname:port`处唯一标识此actor系统实例。Akka使用UID能够可靠地触发远程死亡监视。
 这意味着同一个actor系统一旦从该集群中删除，就永远不会再次加入集群。要将具有相同`hostname:port`的actor系统重新连接到集群，
-您必须停止actor系统并启动具有相同`hostname:port`的新系统，然后将收到不同的UID。
+你必须停止actor系统并启动具有相同`hostname:port`的新系统，然后将收到不同的UID。
 
 The cluster membership state is a specialized [CRDT](http://hal.upmc.fr/docs/00/55/55/88/PDF/techreport.pdf), which means that it has a monotonic
 merge function. When concurrent changes occur on different nodes the updates can always be
@@ -386,7 +386,7 @@ Note that members on the other side of a network partition have no knowledge abo
 the existence of the new members. You should for example not count `WeaklyUp` 
 members in quorum decisions.
 
-请注意，网络分区另一端的成员不了解新成员的存在。例如，您应该在仲裁决策中不计算`WeaklyUp`成员。
+请注意，网络分区另一端的成员不了解新成员的存在。例如，你应该在仲裁决策中不计算`WeaklyUp`成员。
 
 #### State Diagram for the Member States (`akka.cluster.allow-weakly-up-members=off`)
 

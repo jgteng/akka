@@ -197,7 +197,7 @@ Java
 You will probably define the address information of the initial contact points in configuration or system property.
 See also [Configuration](#cluster-client-config).
 
-您可能会在配置或系统属性中定义初始联系点的地址信息。另请参见[配置](#cluster-client-config)。
+你可能会在配置或系统属性中定义初始联系点的地址信息。另请参见[配置](#cluster-client-config)。
 
 A more comprehensive sample is available in the tutorial named
 @scala[[Distributed workers with Akka and Scala](https://github.com/typesafehub/activator-akka-distributed-workers).]
