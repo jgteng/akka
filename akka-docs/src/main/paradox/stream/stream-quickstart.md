@@ -104,7 +104,7 @@ When running this @scala[source in a `scala.App`]@java[program] you might notice
 terminate, because the `ActorSystem` is never terminated. Luckily
 `runForeach` returns a @scala[`Future[Done]`]@java[`CompletionStage<Done>`] which resolves when the stream finishes:
 
-在`scala.App`中运行此source时，您可能会注意到它没有终止，因为`ActorSystem`永远不会终止。
+在`scala.App`中运行此source时，你可能会注意到它没有终止，因为`ActorSystem`永远不会终止。
 幸运的是`runForeach`返回一个`Future[Done]`，它在流结束时解析（出结果）：
 
 Scala
@@ -117,7 +117,7 @@ You may wonder where the Actor gets created that runs the stream, and you are
 probably also asking yourself what this `materializer` means. In order to get
 this value we first need to create an Actor system:
 
-您可能想知道在哪里创建了运行流的Actor，并且您可能也在问自己这个`materializer`的含义。为了获得这个值，
+你可能想知道在哪里创建了运行流的Actor，并且你可能也在问自己这个`materializer`的含义。为了获得这个值，
 我们首先需要创建一个Actor系统：
 
 Scala
@@ -172,7 +172,7 @@ whether the stream terminated normally or exceptionally.
 重要的是要记住实际上没有任何实际计算，这是我们在运行流时想要计算的内容的描述。
 然后我们将得到的数字序列转换为描述文本文件中的行的`ByteString`对象流。然后通过附加文件作为数据的接收者来运行该流。
 在Akka Streams的术语中，这被称为`Sink`。`IOResult`是IO操作在Akka Streams中返回的类型，
-用于告诉您消耗了多少字节或元素以及流是正常终止还是异常终止。
+用于告诉你消耗了多少字节或元素以及流是正常终止还是异常终止。
 
 ### Browser-embedded example
 ### 浏览器嵌入的示例
@@ -180,7 +180,7 @@ whether the stream terminated normally or exceptionally.
 <a name="here-is-another-example-that-you-can-edit-and-run-in-the-browser-"></a>
 Here is another example that you can edit and run in the browser:
 
-以下是您可以在浏览器中编辑和运行的另一个示例：
+以下是你可以在浏览器中编辑和运行的另一个示例：
 
 @@fiddle [TwitterStreamQuickstartDocSpec.scala](/akka-docs/src/test/scala/docs/stream/TwitterStreamQuickstartDocSpec.scala) { #fiddle_code template=Akka layout=v75 minheight=400px }
 
@@ -263,7 +263,7 @@ certain speed: we use the `throttle` operator to slow down the stream to 1
 element per second.
 
 到目前为止，所有操作都与时间无关，并且可以在严格的元素集合上以相同的方式执行。
-下一行表明我们实际上正在处理可以以特定速度流动的流：我们使用`throttle`（）操作符将流速减慢到每秒1个元素。
+下一行表明我们实际上正在处理可以以特定速度流动的流：我们使用`throttle`（）运算符将流速减慢到每秒1个元素。
 
 If you run this program you will see one line printed per second. One aspect
 that is not immediately visible deserves mention, though: if you try and set
@@ -277,8 +277,8 @@ operator to signal to all its upstream sources of data that it can only
 accept elements at a certain rate—when the incoming rate is higher than one per
 second the throttle operator will assert *back-pressure* upstream.
 
-如果您运行此程序，您将看到每秒打印一行。但是，一个值得注意的方面值得一提：如果您尝试将流设置为每个产生十亿个数字，
-那么您会注意到您的JVM不会因 **OutOfMemoryError** 而崩溃，即使您还会注意到流的运行在后台发生，异步
+如果你运行此程序，你将看到每秒打印一行。但是，一个值得注意的方面值得一提：如果你尝试将流设置为每个产生十亿个数字，
+那么你会注意到你的JVM不会因 **OutOfMemoryError** 而崩溃，即使你还会注意到流的运行在后台发生，异步
 （这是辅助信息在未来作为`Future`提供的原因）。使这项工作的秘诀在于Akka Streams隐含地实施普遍的流量控制，
 所有操作员都遵循回压。这允许油门操作员向其所有上游数据源发信号通知它只能以特定速率接收元件 - 当输入速率高于每秒一个时，
 throttle操作员将断言上游的 *back-pressure* （回压）。
@@ -287,8 +287,8 @@ This is all there is to Akka Streams in a nutshell—glossing over the
 fact that there are dozens of sources and sinks and many more stream
 transformation operators to choose from, see also @ref:[operator index](operators/index.md).
 
-这就是Akka Streams的全部内容，简而言之，因为有数十个sources和sinks以及更多的流转换操作符可供选择，另请参阅
-@ref:[操作符索引](operators/index.md) 。
+这就是Akka Streams的全部内容，简而言之，因为有数十个sources和sinks以及更多的流转换运算符可供选择，另请参阅
+@ref:[运算符索引](operators/index.md) 。
 
 # Reactive Tweets
 # 反应式推文
@@ -325,7 +325,7 @@ If you would like to get an overview of the used vocabulary first instead of div
 into an actual example you can have a look at the @ref:[Core concepts](stream-flows-and-basics.md#core-concepts) and @ref:[Defining and running streams](stream-flows-and-basics.md#defining-and-running-streams)
 sections of the docs, and then come back to this quickstart to see it all pieced together into a simple example application.
 
-如果您想首先了解使用过的词汇表，而不是首先进入实际示例，您可以查看 @ref:[核心概念](stream-flows-and-basics.md#core-concepts)
+如果你想首先了解使用过的词汇表，而不是首先进入实际示例，你可以查看 @ref:[核心概念](stream-flows-and-basics.md#core-concepts)
 以及 @ref:[定义和运行流](stream-flows-and-basics.md#defining-and-running-streams) 文档的流部分，
 然后再回到本快速入门看到它们拼凑成一个简单的示例应用程序。
 
@@ -355,7 +355,7 @@ materialization properties, such as default buffer sizes (see also @ref:[Buffers
 be used by the pipeline etc. These can be overridden with `withAttributes` on `Flow`, `Source`, `Sink` and `Graph`.
 
 `ActorMaterializer`可以选择使用`ActorMaterializerSettings`，它可以用来定义materialization的属性，例如默认缓冲区大小
-（参见 @ref:[异步操作符的缓冲区](stream-rate.md#async-stream-buffers) ），管道使用的调度程序等。这些可以在`Flow`，
+（参见 @ref:[异步运算符的缓冲区](stream-rate.md#async-stream-buffers) ），管道使用的调度程序等。这些可以在`Flow`，
 `Source`、`Sink`和`Graph`上使用`withAttributes`进行覆盖。
 
 Let's assume we have a stream of tweets readily available. In Akka this is expressed as a @scala[`Source[Out, M]`]@java[`Source<Out, M>`]:
@@ -506,7 +506,7 @@ As you can see, @scala[inside the `GraphDSL` we use an implicit graph builder `b
 using the `~>` "edge operator" (also read as "connect" or "via" or "to"). The operator is provided implicitly
 by importing `GraphDSL.Implicits._`]@java[we use graph builder `b` to construct the graph using `UniformFanOutShape` and `Flow` s].
 
-如您所见，在`GraphDSL`内部，我们使用隐式图形构建器`b`并使用`~>`“边运算符”（也称为“connect（连接）”或“via（通过）”
+如你所见，在`GraphDSL`内部，我们使用隐式图形构建器`b`并使用`~>`“边运算符”（也称为“connect（连接）”或“via（通过）”
 或“to（到）”）可变地构造图形。通过导入`GraphDSL.Implicits._`提供隐式运算符。
 
 `GraphDSL.create` returns a `Graph`, in this example a @scala[`Graph[ClosedShape, NotUsed]`]@java[`Graph<ClosedShape,NotUsed>`] where
@@ -566,7 +566,7 @@ when it receives another element while it is full. Strategies provided include d
 dropping the entire buffer, signalling @scala[errors]@java[failures] etc. Be sure to pick and choose the strategy that fits your use case best.
 
 `buffer`元素采用显式且必需的`OverflowStrategy`，它定义缓冲区在接收到另一个元素时应如何反应。提供的策略包括删除最旧的元素
-（`dropHead`），删除整个缓冲区，发出错误信号等。确保选择最适合您的用例的策略。
+（`dropHead`），删除整个缓冲区，发出错误信号等。确保选择最适合你的用例的策略。
 
 <a id="materialized-values-quick"></a>
 ## Materialized values
@@ -613,7 +613,7 @@ The materialized type of `sumSink` is @scala[`Future[Int]`]@java[`CompletionStag
 has also a type parameter of @scala[`Future[Int]`]@java[`CompletionStage<Integer>`].
 
 还记得`Source[+Out，+Mat]`，`Flow[-In，+Out，+Mat]`和`Sink[-In，+Mat]`上那些神秘的`Mat`类型参数？
-它们表示这些处理部件在实现时返回的值的类型。将这些链接在一起时，您可以明确地组合它们的具体化值。在我们的示例中，
+它们表示这些处理部件在实现时返回的值的类型。将这些链接在一起时，你可以明确地组合它们的具体化值。在我们的示例中，
 我们使用了`Keep.right`预定义函数，该函数告诉实现只关心当前附加到右侧的运算符的物化类型。`sumSink`的物化类型是`Future[Int]`，
 由于使用了`Keep.right`，生成的`RunnableGraph`也有一个`Future[Int]`的类型参数。
 

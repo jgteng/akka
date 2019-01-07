@@ -283,7 +283,7 @@ together with the tutorial. The source code of this sample can be found in the @
 There are a couple of things to keep in mind when writing multi node tests or else your tests might behave in
 surprising ways.
 
-在编写多节点测试时要记住几件事，否则您的测试可能会以令人惊讶的方式运行。
+在编写多节点测试时要记住几件事，否则你的测试可能会以令人惊讶的方式运行。
 
  * Don't issue a shutdown of the first node. The first node is the controller and if it shuts down your test will break.
  * To be able to use `blackhole`, `passThrough`, and `throttle` you must activate the failure injector and
@@ -295,12 +295,12 @@ shutting down the node.
 thread. This also means that you shouldn't use them from inside an actor, a future, or a scheduled task.
 
  * 不要关闭第一个节点。第一个节点是控制器，如果它关闭，你的测试就会中断。
- * 为了能够使用`blackhole`、`passThrough`和`throttle`，您必须通过在`MultiNodeConfig`中指定`testTransport(on = true)`
+ * 为了能够使用`blackhole`、`passThrough`和`throttle`，你必须通过在`MultiNodeConfig`中指定`testTransport(on = true)`
    来激活故障注入器和throttler传输适配器。
  * 限制（Throttling），关闭和其他故障注入只能从第一个节点完成，第一个节点也是控制器。
  * 在节点关闭后，不要使用`node(address)`询问节点的地址。在关闭节点之前获取地址。
  * 不要在其他线程而不是主测试线程使用`MultiNodeSpec`的方法，如地址查找（address lookup）、屏障输入（barrier entry）等。
-   这也意味着您不应该在actor，future或调度（scheduled）任务中使用它们。
+   这也意味着你不应该在actor，future或调度（scheduled）任务中使用它们。
 
 ## Configuration
 ## 配置
