@@ -4,7 +4,7 @@
 
 package akka
 
-import akka.ValidatePullRequest.{ValidatePR, additionalTasks}
+import akka.AkkaValidatePullRequest.additionalTasks
 import de.heikoseeberger.sbtheader.HeaderPlugin.autoImport._
 import de.heikoseeberger.sbtheader.{CommentCreator, HeaderPlugin}
 import com.typesafe.sbt.MultiJvmPlugin.MultiJvmKeys._
@@ -15,7 +15,7 @@ trait CopyrightHeader extends AutoPlugin {
 
   override def requires:Plugins = HeaderPlugin
 
-  override def trigger = allRequirements
+  override def trigger: PluginTrigger = allRequirements
 
   protected def headerMappingSettings: Seq[Def.Setting[_]] =
     Seq(Compile, Test, MultiJvm).flatMap { config =>
@@ -47,7 +47,9 @@ trait CopyrightHeader extends AutoPlugin {
     }
   )
 
-  val CurrentYear = java.time.Year.now.getValue.toString
+  // We hard-code this so PR's created in year X will not suddenly fail in X+1.
+  // Of course we should remember to update it early in the year.
+  val CurrentYear = "2019"
   val CopyrightPattern = "Copyright \\([Cc]\\) (\\d{4}([-–]\\d{4})?) (Lightbend|Typesafe) Inc. <.*>".r
   val CopyrightHeaderPattern = s"(?s).*${CopyrightPattern}.*".r
 
@@ -106,7 +108,7 @@ object CopyrightHeader extends CopyrightHeader
 object CopyrightHeaderInPr extends CopyrightHeader {
 
   override val additional = Def.settings(
-    additionalTasks in ValidatePR += headerCheck in Compile,
-    additionalTasks in ValidatePR += headerCheck in Test
+    additionalTasks += headerCheck in Compile,
+    additionalTasks += headerCheck in Test
   )
 }

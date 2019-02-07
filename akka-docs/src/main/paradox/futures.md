@@ -28,7 +28,7 @@ See also @ref:[Java 8 Compatibility](java8-compat.md) for Java compatibility.
 ## Execution Contexts
 
 In order to execute callbacks and operations, Futures need something called an `ExecutionContext`,
-which is very similar to a `java.util.concurrent.Executor`. if you have an `ActorSystem` in scope,
+which is very similar to a `java.util.concurrent.Executor`. If you have an `ActorSystem` in scope,
 it will use its default dispatcher as the `ExecutionContext`, or you can use the factory methods provided
 by the @scala[`ExecutionContext` companion object]@java[`ExecutionContexts` class] to wrap `Executors` and `ExecutorServices`, or even create your own.
 
@@ -45,7 +45,7 @@ dispatcher doubles as an `ExecutionContext`. If the nature of the Future
 calls invoked by the actor matches or is compatible with the activities of that
 actor (e.g. all CPU bound and no latency requirements), then it may be easiest
 to reuse the dispatcher for running the Futures by importing
-@scala[`context.dispatcher`]@java[`getContext().dispatcher()`].
+@scala[`context.dispatcher`]@java[`getContext().getDispatcher()`].
 
 Scala
 :  @@snip [FutureDocSpec.scala](/akka-docs/src/test/scala/docs/future/FutureDocSpec.scala) { #context-dispatcher }
@@ -368,21 +368,7 @@ you can also parallelize it by chunking your futures into sub-sequences and redu
 ## Callbacks
 
 Sometimes you just want to listen to a `Future` being completed, and react to that not by creating a new `Future`, but by side-effecting.
-For this `Future` supports `onComplete`, `onSuccess` and `onFailure`, of which the last two are specializations of the first.
-
-Scala
-:  @@snip [FutureDocSpec.scala](/akka-docs/src/test/scala/docs/future/FutureDocSpec.scala) { #onSuccess }
-
-Java
-:  @@snip [FutureDocTest.java](/akka-docs/src/test/java/jdocs/future/FutureDocTest.java) { #onSuccess }
-
-
-Scala
-:  @@snip [FutureDocSpec.scala](/akka-docs/src/test/scala/docs/future/FutureDocSpec.scala) { #onFailure }
-
-Java
-:  @@snip [FutureDocTest.java](/akka-docs/src/test/java/jdocs/future/FutureDocTest.java) { #onFailure }
-
+For this, `Future` supports `onComplete`:
 
 Scala
 :  @@snip [FutureDocSpec.scala](/akka-docs/src/test/scala/docs/future/FutureDocSpec.scala) { #onComplete }

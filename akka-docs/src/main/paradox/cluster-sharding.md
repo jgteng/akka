@@ -371,7 +371,7 @@ the number of shards (and therefore load) between different nodes may be signifi
 `rebalance-threshold`为1可提供最佳分布，因此通常是最佳选择。较高的阈值意味着可以同时重新平衡更多的分片，
 而不是逐个重新分配。这具有以下优点：重新平衡过程可以更快但是具有不同节点之间的分片数量（并且因此负载）可能显着不同的缺点。（TODO？）
 
-### Shard Coordinator State
+### ShardCoordinator State
 
 ### 分片协调员状态
 

@@ -33,7 +33,16 @@ i.e. not necessarily the initial contact points.
 并在链路断开时建立新连接。当查找receptionist时，它使用从先前建立连接的联系点来检索新的接触点（节点），
 或者定期刷新联系人（contacts），即receptionist可能不在初始联系点上。
 
-@@@ note
+Using the @unidoc[ClusterClient] for communicating with a cluster from the outside requires that the system with the client
+can both connect and be connected to with Akka Remoting from all the nodes in the cluster with a receptionist.
+This creates a tight coupling in that the client and cluster systems may need to have the same version of
+both Akka, libraries, message classes, serializers and potentially even the JVM. In many cases it is a better solution
+to use a more explicit and decoupling protocol such as [HTTP](https://doc.akka.io/docs/akka-http/current/index.html) or
+[gRPC](https://developer.lightbend.com/docs/akka-grpc/current/).
+
+Additionally since Akka Remoting is primarily designed as a protocol for Akka Cluster there is no explicit resource
+management, when a @unidoc[ClusterClient] has been used it will cause connections with the cluster until the ActorSystem is
+stopped (unlike other kinds of network clients).
 
 @unidoc[ClusterClient] should not be used when sending messages to actors that run
 within the same cluster. Similar functionality as the @unidoc[ClusterClient] is
@@ -43,10 +52,7 @@ belong to the same cluster.
 向同一集群中运行的actor发送消息时，不应使用 @unidoc[ClusterClient]。对于属于同一集群的actor，
 集群中的 @ref:[分布式发布/订阅](distributed-pub-sub.md) 以更有效的方式提供了与`ClusterClient`类似的功能。
 
-@@@
-
-Also, note it's necessary to change `akka.actor.provider` from `local`
-to `remote` or `cluster` when using
+It is necessary that the connecting system has its `akka.actor.provider` set  to `remote` or `cluster` when using
 the cluster client.
 
 此外，请注意在使用集群客户端时需要将`akka.actor.provider`从`local`改为`remote`或`cluster`。

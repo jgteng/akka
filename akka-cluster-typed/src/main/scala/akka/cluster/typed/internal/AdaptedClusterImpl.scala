@@ -7,7 +7,7 @@ package akka.cluster.typed.internal
 import akka.actor.typed.Props
 import akka.annotation.InternalApi
 import akka.cluster.ClusterEvent.MemberEvent
-import akka.cluster.{ ClusterEvent, Member, MemberStatus, UniqueAddress }
+import akka.cluster.{ ClusterEvent, Member, MemberStatus }
 import akka.actor.typed.{ ActorRef, ActorSystem, Terminated }
 import akka.cluster.typed._
 import akka.actor.typed.internal.adapter.ActorSystemAdapter
@@ -104,7 +104,7 @@ private[akka] object AdapterClusterImpl {
     }.narrow[ClusterStateSubscription]
   }
 
-  private def managerBehavior(adaptedCluster: akka.cluster.Cluster) = Behaviors.receive[ClusterCommand]((ctx, msg) ⇒
+  private def managerBehavior(adaptedCluster: akka.cluster.Cluster) = Behaviors.receive[ClusterCommand]((_, msg) ⇒
     msg match {
       case Join(address) ⇒
         adaptedCluster.join(address)
