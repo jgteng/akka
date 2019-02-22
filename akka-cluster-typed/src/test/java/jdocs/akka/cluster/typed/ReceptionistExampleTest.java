@@ -18,7 +18,7 @@ import akka.cluster.ClusterEvent;
 import akka.cluster.typed.Cluster;
 import akka.cluster.typed.Subscribe;
 import org.junit.Test;
-import org.scalatest.junit.JUnitSuite;
+import org.scalatestplus.junit.JUnitSuite;
 import scala.concurrent.Await;
 import scala.concurrent.duration.Duration;
 
@@ -50,7 +50,7 @@ public class ReceptionistExampleTest extends JUnitSuite {
 
       @Override
       public Receive<Object> createReceive() {
-        return receiveBuilder()
+        return newReceiveBuilder()
             .onMessage(
                 Receptionist.Listing.class,
                 listing -> listing.isForKey(serviceKey),
@@ -131,7 +131,7 @@ public class ReceptionistExampleTest extends JUnitSuite {
 
       @Override
       public Receive<Object> createReceive() {
-        return receiveBuilder()
+        return newReceiveBuilder()
             .onMessage(
                 Receptionist.Listing.class,
                 listing -> listing.isForKey(serviceKey),

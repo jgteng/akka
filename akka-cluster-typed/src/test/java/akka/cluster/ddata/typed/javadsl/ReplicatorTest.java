@@ -9,7 +9,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.scalatest.junit.JUnitSuite;
+import org.scalatestplus.junit.JUnitSuite;
 
 // #sample
 import java.util.Optional;
@@ -134,7 +134,7 @@ public class ReplicatorTest extends JUnitSuite {
 
     @Override
     public Receive<ClientCommand> createReceive() {
-      return receiveBuilder()
+      return newReceiveBuilder()
           .onMessage(Increment.class, this::onIncrement)
           .onMessage(InternalUpdateResponse.class, msg -> Behaviors.same())
           .onMessage(GetValue.class, this::onGetValue)

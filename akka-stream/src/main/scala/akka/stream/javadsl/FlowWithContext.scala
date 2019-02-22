@@ -7,6 +7,8 @@ package akka.stream.javadsl
 import akka.annotation.ApiMayChange
 import akka.japi.{ Pair, Util, function }
 import akka.stream._
+import akka.event.LoggingAdapter
+import akka.util.ConstantFun
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.JavaConverters._
@@ -19,10 +21,12 @@ import scala.compat.java8.FutureConverters._
  */
 @ApiMayChange
 object FlowWithContext {
-  def create[Ctx, In](): FlowWithContext[Ctx, In, Ctx, In, akka.NotUsed] = {
-    new FlowWithContext(scaladsl.FlowWithContext[Ctx, In])
+
+  def create[In, Ctx](): FlowWithContext[In, Ctx, In, Ctx, akka.NotUsed] = {
+    new FlowWithContext(scaladsl.FlowWithContext[In, Ctx])
   }
-  def fromPairs[CtxIn, In, CtxOut, Out, Mat](under: Flow[Pair[In, CtxIn], Pair[Out, CtxOut], Mat]): FlowWithContext[CtxIn, In, CtxOut, Out, Mat] = {
+
+  def fromPairs[In, CtxIn, Out, CtxOut, Mat](under: Flow[Pair[In, CtxIn], Pair[Out, CtxOut], Mat]): FlowWithContext[In, CtxIn, Out, CtxOut, Mat] = {
     new FlowWithContext(scaladsl.FlowWithContext.from(scaladsl.Flow[(In, CtxIn)].map { case (i, c) ⇒ Pair(i, c) }.viaMat(under.asScala.map(_.toScala))(scaladsl.Keep.right)))
   }
 }
@@ -38,7 +42,7 @@ object FlowWithContext {
  * API MAY CHANGE
  */
 @ApiMayChange
-final class FlowWithContext[-CtxIn, -In, +CtxOut, +Out, +Mat](delegate: scaladsl.FlowWithContext[CtxIn, In, CtxOut, Out, Mat]) extends GraphDelegate(delegate) {
+final class FlowWithContext[-In, -CtxIn, +Out, +CtxOut, +Mat](delegate: scaladsl.FlowWithContext[In, CtxIn, Out, CtxOut, Mat]) extends GraphDelegate(delegate) {
   /**
    * Transform this flow by the regular flow. The given flow must support manual context propagation by
    * taking and producing tuples of (data, context).
@@ -48,7 +52,7 @@ final class FlowWithContext[-CtxIn, -In, +CtxOut, +Out, +Mat](delegate: scaladsl
    *
    * @see [[akka.stream.javadsl.Flow.via]]
    */
-  def via[CtxOut2, Out2, Mat2](viaFlow: Graph[FlowShape[Pair[Out @uncheckedVariance, CtxOut @uncheckedVariance], Pair[Out2, CtxOut2]], Mat2]): FlowWithContext[CtxIn, In, CtxOut2, Out2, Mat] = {
+  def via[Out2, CtxOut2, Mat2](viaFlow: Graph[FlowShape[Pair[Out @uncheckedVariance, CtxOut @uncheckedVariance], Pair[Out2, CtxOut2]], Mat2]): FlowWithContext[In, CtxIn, Out2, CtxOut2, Mat] = {
     val under = asFlow().via(viaFlow)
     FlowWithContext.fromPairs(under)
   }
@@ -72,7 +76,7 @@ final class FlowWithContext[-CtxIn, -In, +CtxOut, +Out, +Mat](delegate: scaladsl
    *
    * @see [[akka.stream.javadsl.Flow.collect]]
    */
-  def collect[Out2](pf: PartialFunction[Out, Out2]): FlowWithContext[CtxIn, In, CtxOut, Out2, Mat] =
+  def collect[Out2](pf: PartialFunction[Out, Out2]): FlowWithContext[In, CtxIn, Out2, CtxOut, Mat] =
     viaScala(_.collect(pf))
 
   /**
@@ -82,7 +86,7 @@ final class FlowWithContext[-CtxIn, -In, +CtxOut, +Out, +Mat](delegate: scaladsl
    *
    * @see [[akka.stream.javadsl.Flow.filter]]
    */
-  def filter(p: function.Predicate[Out]): FlowWithContext[CtxIn, In, CtxOut, Out, Mat] =
+  def filter(p: function.Predicate[Out]): FlowWithContext[In, CtxIn, Out, CtxOut, Mat] =
     viaScala(_.filter(p.test))
 
   /**
@@ -92,7 +96,7 @@ final class FlowWithContext[-CtxIn, -In, +CtxOut, +Out, +Mat](delegate: scaladsl
    *
    * @see [[akka.stream.javadsl.Flow.filterNot]]
    */
-  def filterNot(p: function.Predicate[Out]): FlowWithContext[CtxIn, In, CtxOut, Out, Mat] =
+  def filterNot(p: function.Predicate[Out]): FlowWithContext[In, CtxIn, Out, CtxOut, Mat] =
     viaScala(_.filterNot(p.test))
 
   /**
@@ -102,7 +106,7 @@ final class FlowWithContext[-CtxIn, -In, +CtxOut, +Out, +Mat](delegate: scaladsl
    *
    * @see [[akka.stream.javadsl.Flow.grouped]]
    */
-  def grouped(n: Int): FlowWithContext[CtxIn, In, java.util.List[CtxOut @uncheckedVariance], java.util.List[Out @uncheckedVariance], Mat] =
+  def grouped(n: Int): FlowWithContext[In, CtxIn, java.util.List[Out @uncheckedVariance], java.util.List[CtxOut @uncheckedVariance], Mat] =
     viaScala(_.grouped(n).map(_.asJava).mapContext(_.asJava))
 
   /**
@@ -110,10 +114,10 @@ final class FlowWithContext[-CtxIn, -In, +CtxOut, +Out, +Mat](delegate: scaladsl
    *
    * @see [[akka.stream.javadsl.Flow.map]]
    */
-  def map[Out2](f: function.Function[Out, Out2]): FlowWithContext[CtxIn, In, CtxOut, Out2, Mat] =
+  def map[Out2](f: function.Function[Out, Out2]): FlowWithContext[In, CtxIn, Out2, CtxOut, Mat] =
     viaScala(_.map(f.apply))
 
-  def mapAsync[Out2](parallelism: Int, f: function.Function[Out, CompletionStage[Out2]]): FlowWithContext[CtxIn, In, CtxOut, Out2, Mat] =
+  def mapAsync[Out2](parallelism: Int, f: function.Function[Out, CompletionStage[Out2]]): FlowWithContext[In, CtxIn, Out2, CtxOut, Mat] =
     viaScala(_.mapAsync[Out2](parallelism)(o ⇒ f.apply(o).toScala))
 
   /**
@@ -144,13 +148,13 @@ final class FlowWithContext[-CtxIn, -In, +CtxOut, +Out, +Mat](delegate: scaladsl
    *
    * @see [[akka.stream.javadsl.Flow.mapConcat]]
    */
-  def mapConcat[Out2](f: function.Function[Out, _ <: java.lang.Iterable[Out2]]): FlowWithContext[CtxIn, In, CtxOut, Out2, Mat] =
+  def mapConcat[Out2](f: function.Function[Out, _ <: java.lang.Iterable[Out2]]): FlowWithContext[In, CtxIn, Out2, CtxOut, Mat] =
     viaScala(_.mapConcat(elem ⇒ Util.immutableSeq(f.apply(elem))))
 
   /**
    * Apply the given function to each context element (leaving the data elements unchanged).
    */
-  def mapContext[CtxOut2](extractContext: function.Function[CtxOut, CtxOut2]): FlowWithContext[CtxIn, In, CtxOut2, Out, Mat] = {
+  def mapContext[CtxOut2](extractContext: function.Function[CtxOut, CtxOut2]): FlowWithContext[In, CtxIn, Out, CtxOut2, Mat] = {
     viaScala(_.mapContext(extractContext.apply))
   }
 
@@ -161,7 +165,7 @@ final class FlowWithContext[-CtxIn, -In, +CtxOut, +Out, +Mat](delegate: scaladsl
    *
    * @see [[akka.stream.javadsl.Flow.sliding]]
    */
-  def sliding(n: Int, step: Int = 1): FlowWithContext[CtxIn, In, java.util.List[CtxOut @uncheckedVariance], java.util.List[Out @uncheckedVariance], Mat] =
+  def sliding(n: Int, step: Int = 1): FlowWithContext[In, CtxIn, java.util.List[Out @uncheckedVariance], java.util.List[CtxOut @uncheckedVariance], Mat] =
     viaScala(_.sliding(n, step).map(_.asJava).mapContext(_.asJava))
 
   /**
@@ -192,14 +196,46 @@ final class FlowWithContext[-CtxIn, -In, +CtxOut, +Out, +Mat](delegate: scaladsl
    *
    * @see [[akka.stream.javadsl.Flow.statefulMapConcat]]
    */
-  def statefulMapConcat[Out2](f: function.Creator[function.Function[Out, java.lang.Iterable[Out2]]]): FlowWithContext[CtxIn, In, CtxOut, Out2, Mat] =
+  def statefulMapConcat[Out2](f: function.Creator[function.Function[Out, java.lang.Iterable[Out2]]]): FlowWithContext[In, CtxIn, Out2, CtxOut, Mat] =
     viaScala(_.statefulMapConcat { () ⇒
       val fun = f.create()
       elem ⇒ Util.immutableSeq(fun(elem))
     })
 
-  def asScala: scaladsl.FlowWithContext[CtxIn, In, CtxOut, Out, Mat] = delegate
+  /**
+   * Context-preserving variant of [[akka.stream.javadsl.Flow.log]].
+   *
+   * @see [[akka.stream.javadsl.Flow.log]]
+   */
+  def log(name: String, extract: function.Function[Out, Any], log: LoggingAdapter): FlowWithContext[In, CtxIn, Out, CtxOut, Mat] =
+    viaScala(_.log(name, e ⇒ extract.apply(e))(log))
 
-  private[this] def viaScala[CtxIn2, In2, CtxOut2, Out2, Mat2](f: scaladsl.FlowWithContext[CtxIn, In, CtxOut, Out, Mat] ⇒ scaladsl.FlowWithContext[CtxIn2, In2, CtxOut2, Out2, Mat2]): FlowWithContext[CtxIn2, In2, CtxOut2, Out2, Mat2] =
+  /**
+   * Context-preserving variant of [[akka.stream.javadsl.Flow.log]].
+   *
+   * @see [[akka.stream.javadsl.Flow.log]]
+   */
+  def log(name: String, extract: function.Function[Out, Any]): FlowWithContext[In, CtxIn, Out, CtxOut, Mat] =
+    this.log(name, extract, null)
+
+  /**
+   * Context-preserving variant of [[akka.stream.javadsl.Flow.log]].
+   *
+   * @see [[akka.stream.javadsl.Flow.log]]
+   */
+  def log(name: String, log: LoggingAdapter): FlowWithContext[In, CtxIn, Out, CtxOut, Mat] =
+    this.log(name, ConstantFun.javaIdentityFunction[Out], log)
+
+  /**
+   * Context-preserving variant of [[akka.stream.javadsl.Flow.log]].
+   *
+   * @see [[akka.stream.javadsl.Flow.log]]
+   */
+  def log(name: String): FlowWithContext[In, CtxIn, Out, CtxOut, Mat] =
+    this.log(name, ConstantFun.javaIdentityFunction[Out], null)
+
+  def asScala: scaladsl.FlowWithContext[In, CtxIn, Out, CtxOut, Mat] = delegate
+
+  private[this] def viaScala[In2, CtxIn2, Out2, CtxOut2, Mat2](f: scaladsl.FlowWithContext[In, CtxIn, Out, CtxOut, Mat] ⇒ scaladsl.FlowWithContext[In2, CtxIn2, Out2, CtxOut2, Mat2]): FlowWithContext[In2, CtxIn2, Out2, CtxOut2, Mat2] =
     new FlowWithContext(f(delegate))
 }

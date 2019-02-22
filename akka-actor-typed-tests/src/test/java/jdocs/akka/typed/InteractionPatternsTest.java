@@ -11,7 +11,7 @@ import akka.actor.typed.Props;
 import akka.actor.typed.javadsl.*;
 import akka.actor.testkit.typed.javadsl.TestProbe;
 import org.junit.Test;
-import org.scalatest.junit.JUnitSuite;
+import org.scalatestplus.junit.JUnitSuite;
 import scala.concurrent.Await;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -207,7 +207,7 @@ public class InteractionPatternsTest extends JUnitSuite {
 
       @Override
       public Receive<Command> createReceive() {
-        return receiveBuilder()
+        return newReceiveBuilder()
             .onMessage(
                 Translate.class,
                 cmd -> {
@@ -603,7 +603,7 @@ public class InteractionPatternsTest extends JUnitSuite {
 
     @Override
     public Receive<Object> createReceive() {
-      return receiveBuilder()
+      return newReceiveBuilder()
           .onMessage(
               Wallet.class,
               (wallet) -> {

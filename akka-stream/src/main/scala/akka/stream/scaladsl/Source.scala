@@ -194,7 +194,7 @@ final class Source[+Out, +Mat](
   /**
    * Converts this Scala DSL element to it's Java DSL counterpart.
    */
-  def asJava[JOut >: Out, JMat >: Mat]: javadsl.Source[JOut, JMat] = new javadsl.Source(this)
+  def asJava: javadsl.Source[Out @uncheckedVariance, Mat @uncheckedVariance] = new javadsl.Source(this)
 
   /**
    * Combines several sources with fan-in strategy like `Merge` or `Concat` and returns `Source`.
@@ -220,7 +220,7 @@ final class Source[+Out, +Mat](
    * API MAY CHANGE
    */
   @ApiMayChange
-  def startContextPropagation[Ctx](f: Out ⇒ Ctx): SourceWithContext[Ctx, Out, Mat] = new SourceWithContext(this.map(e ⇒ (e, f(e))))
+  def startContextPropagation[Ctx](f: Out ⇒ Ctx): SourceWithContext[Out, Ctx, Mat] = new SourceWithContext(this.map(e ⇒ (e, f(e))))
 }
 
 object Source {

@@ -6,19 +6,44 @@ package akka.actor.typed.scaladsl
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import scala.util.Properties
+
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import akka.actor.testkit.typed.TestException
 import akka.actor.typed.scaladsl.adapter._
 import akka.actor.typed.{ Behavior, LogMarker }
 import akka.event.Logging
-import akka.event.Logging.{ LogEventWithCause, LogEventWithMarker }
+import akka.event.Logging.{ LogEvent, LogEventWithCause, LogEventWithMarker }
 import akka.testkit.EventFilter
 import org.scalatest.WordSpecLike
+
+class SomeClass
+
+object WhereTheBehaviorIsDefined {
+
+  def behavior: Behavior[String] = Behaviors.setup { context ⇒
+    context.log.info("Starting up")
+    Behaviors.stopped
+  }
+
+}
+
+object BehaviorWhereTheLoggerIsUsed {
+  def behavior: Behavior[String] = Behaviors.setup(ctx ⇒ new BehaviorWhereTheLoggerIsUsed(ctx))
+}
+class BehaviorWhereTheLoggerIsUsed(context: ActorContext[String]) extends AbstractBehavior[String] {
+  context.log.info("Starting up")
+  override def onMessage(msg: String): Behavior[String] = {
+    Behaviors.same
+  }
+}
 
 class ActorLoggingSpec extends ScalaTestWithActorTestKit("""
     akka.loglevel = DEBUG # test verifies debug
     akka.loggers = ["akka.testkit.TestEventListener"]
     """) with WordSpecLike {
+
+  private val isScala211 = Properties.versionNumberString.startsWith("2.11")
 
   val marker = LogMarker("marker")
   val cause = new TestException("böö")
@@ -41,6 +66,82 @@ class ActorLoggingSpec extends ScalaTestWithActorTestKit("""
 
       EventFilter.info("got message Hello", source = "akka://ActorLoggingSpec/user/the-actor", occurrences = 1).intercept {
         actor ! "Hello"
+      }
+    }
+
+    "contain the class name where the first log was called" in {
+      val eventFilter = EventFilter.custom({
+        case l: LogEvent if l.logClass == classOf[ActorLoggingSpec] ⇒ true
+        case l: LogEvent if isScala211 ⇒
+          // TODO remove in Akka 2.6 when we drop Scala 2.11
+          // the class with 2.11 is like
+          // ActorLoggingSpec$$anonfun$1$$anonfun$apply$mcV$sp$26$$anonfun$apply$6$$anonfun$apply$7
+          l.logClass.getName.startsWith(classOf[ActorLoggingSpec].getName)
+        case l: LogEvent ⇒
+          println(l.logClass)
+          false
+      }, occurrences = 1)
+
+      eventFilter.intercept {
+        spawn(Behaviors.setup[String] { context ⇒
+          context.log.info("Started")
+
+          Behaviors.receive { (context, message) ⇒
+            context.log.info("got message {}", message)
+            Behaviors.same
+          }
+        }, "the-actor-with-class")
+      }
+    }
+
+    "contain the object class name where the first log was called" in {
+      val eventFilter = EventFilter.custom({
+        case l: LogEvent if l.logClass == WhereTheBehaviorIsDefined.getClass ⇒ true
+        case l: LogEvent if isScala211 ⇒
+          // TODO remove in Akka 2.6 when we drop Scala 2.11
+          // the class with 2.11 is like
+          // WhereTheBehaviorIsDefined$$anonfun$behavior$1
+          l.logClass.getName.startsWith(WhereTheBehaviorIsDefined.getClass.getName)
+        case l: LogEvent ⇒
+          println(l.logClass)
+          false
+      }, occurrences = 1)
+
+      eventFilter.intercept {
+        spawn(WhereTheBehaviorIsDefined.behavior, "the-actor-with-object")
+      }
+    }
+
+    "contain the abstract behavior class name where the first log was called" in {
+      val eventFilter = EventFilter.custom({
+        case l: LogEvent if l.logClass == classOf[BehaviorWhereTheLoggerIsUsed] ⇒ true
+        case l: LogEvent ⇒
+          println(l.logClass)
+          false
+      }, occurrences = 1)
+
+      eventFilter.intercept {
+        spawn(BehaviorWhereTheLoggerIsUsed.behavior, "the-actor-with-behavior")
+      }
+    }
+
+    "allow for adapting log source and class" in {
+      val eventFilter = EventFilter.custom({
+        case l: LogEvent ⇒
+          l.logClass == classOf[SomeClass] &&
+            l.logSource == "who-knows-where-it-came-from" &&
+            l.mdc == Map("mdc" -> true) // mdc should be kept
+      }, occurrences = 1)
+
+      eventFilter.intercept {
+        spawn(Behaviors.setup[String] { context ⇒
+          val log = context.log.withMdc(Map("mdc" -> true))
+            .withLoggerClass(classOf[SomeClass])
+            .withLogSource("who-knows-where-it-came-from")
+          log.info("Started")
+
+          Behaviors.empty
+        }, "the-actor-with-custom-class")
       }
     }
 
@@ -204,7 +305,7 @@ class ActorLoggingSpec extends ScalaTestWithActorTestKit("""
       ) {
           Behaviors.setup { context ⇒
             context.log.info("Starting")
-            Behaviors.receiveMessage { message ⇒
+            Behaviors.receiveMessage { _ ⇒
               context.log.info("Got message!")
               Behaviors.same
             }
@@ -348,7 +449,7 @@ class ActorLoggingSpec extends ScalaTestWithActorTestKit("""
     "provide a withMdc decorator" in {
       val behavior = Behaviors.withMdc[Protocol](Map("mdc" -> "outer"))(
         Behaviors.setup { context ⇒
-          Behaviors.receiveMessage { message ⇒
+          Behaviors.receiveMessage { _ ⇒
             context.log.withMdc(Map("mdc" -> "inner")).info("Got message log.withMDC!")
             // after log.withMdc so we know it didn't change the outer mdc
             context.log.info("Got message behavior.withMdc!")

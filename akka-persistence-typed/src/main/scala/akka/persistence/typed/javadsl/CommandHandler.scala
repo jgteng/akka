@@ -9,7 +9,6 @@ import java.util.function.{ BiFunction, Predicate, Supplier, Function ⇒ JFunct
 
 import akka.annotation.InternalApi
 import akka.persistence.typed.internal._
-import akka.persistence.typed.javadsl.CommandHandlerBuilderByState.CommandHandlerCase
 import akka.util.OptionVal
 
 import scala.compat.java8.FunctionConverters._

@@ -139,7 +139,7 @@ but from a different package. In Akka we simply expose the new type when asked t
 扩展用户和朋友将需要复制或改变以延长完全相同的接口，但是从不同包。在Akka中，我们只是在被要求时公开新类型 - 
 从JDK 9发布之日起就已经支持JDK 9类型了。
 
-The other, and perhaps more important reason for hiding the Reactive streams interfaces comes back to the first points of this explanation: the fact of Reactive Streams being an SPI, and as such is hard to "get right" in ad-hoc implementations. Thus Akka Streams discourages, the use of the hard to implement pieces of the underlying infrastructure, and offers simpler, more type-safe, yet more powerful abstractions for users to work with: GraphStages and operators. It is of course still (and easily) possible to accept or obtain Reactive Streams (or JDK+ Flow) representations of the stream operators by using methods like `asPublisher` or `fromSubscriber`.
+The other, and perhaps more important reason for hiding the Reactive Streams interfaces comes back to the first points of this explanation: the fact of Reactive Streams being an SPI, and as such is hard to "get right" in ad-hoc implementations. Thus Akka Streams discourages the use of the hard to implement pieces of the underlying infrastructure, and offers simpler, more type-safe, yet more powerful abstractions for users to work with: GraphStages and operators. It is of course still (and easily) possible to accept or obtain Reactive Streams (or JDK+ Flow) representations of the stream operators by using methods like `asPublisher` or `fromSubscriber`.
 
 隐藏Reactive流接口的另一个也许更重要的原因可以追溯到这个解释的第一点：Reactive Streams是一个SPI的事实，
 因此很难在ad-hoc实现中“正确”。因此，Akka Streams不鼓励使用难以实现的底层基础架构，并为用户提供更简单，
