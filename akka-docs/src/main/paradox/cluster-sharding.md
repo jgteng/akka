@@ -270,15 +270,15 @@ Where `#` is a number to distinguish between instances as there are multiple in 
  1. Incoming message `M1` to `ShardRegion` instance `SR1`.
  2. `M1` is mapped to shard `S1`. `SR1` doesn't know about `S1`, so it asks the `SC` for the location of `S1`.
  3. `SC` answers that the home of `S1` is `SR1`.
- 4. `R1` creates child actor for the entity `E1` and sends buffered messages for `S1` to `E1` child
- 5. All incoming messages for `S1` which arrive at `R1` can be handled by `R1` without `SC`. It creates entity children as needed, and forwards messages to them.
+ 4. `SR1` creates child actor for the entity `E1` and sends buffered messages for `S1` to `E1` child
+ 5. All incoming messages for `S1` which arrive at `SR1` can be handled by `SR1` without `SC`. It creates entity children as needed, and forwards messages to them.
 
 #### 场景1：发送到本地 ShardRegion 的未知分片的消息
 
  1. 消息`M1`传入到`ShardRegion`实例`SR1`。
  2. `M1`被映射到分片`S1`。`SR1`不知道`S1`，所以它要求`SC`提供`S1`的位置。
  3. `SC`回答`S1`的家（home）是`SR1`。
- 4. `R1`为实体`E1`创建子actor并将`S1`缓冲的消息发送给`E1`子节点。
+ 4. `SR1`为实体`E1`创建子actor并将`S1`缓冲的消息发送给`E1`子节点。
  5. 到达`R1`的`S1`的所有传入消息都可以由`R1`处理页不需要`SC`。它根据需要创建实体子项，并将消息转发给它们。
 
 #### Scenario 2: Message to an unknown shard that belongs to a remote ShardRegion 
@@ -655,6 +655,8 @@ Java
 :  @@snip [ClusterShardingTest.java](/akka-docs/src/test/java/jdocs/sharding/ClusterShardingTest.java) { #counter-supervisor-start }
 
 Note that stopped entities will be started again when a new message is targeted to the entity.
+
+If 'on stop' backoff supervision strategy is used, a final termination message must be set and used for passivation, see @ref:[Supervision](general/supervision.md#Sharding)
 
 请注意，当新消息以实体为目标时，将再次启动已停止的实体。
 

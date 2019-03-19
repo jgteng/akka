@@ -1245,7 +1245,7 @@ From JMX you can:
  * 标记集群内任何节点为down
  * 告诉集群内任何节（开始）leave
 
-Member nodes are identified by their address, in format *akka.<protocol>://<actor-system-name>@<hostname>:<port>*.
+Member nodes are identified by their address, in format *akka.**protocol**://**actor-system-name**@**hostname**:**port***.
 
 成员节点由它的地址标识，格式为 *akka.<protocol>:://<actor-system-name>@<hostname>:<port>*。
 
