@@ -43,10 +43,7 @@ All data entries are spread to all nodes, or nodes with a certain role, in the c
 via direct replication and gossip based dissemination. You have fine grained control
 of the consistency level for reads and writes.
 
-所有数据条目都通过直接复制和基于gossip传播到集群中的所有节点或具有特定角色的节点。
-你可以对读取和写入的一致性级别进行精细控制。
-
-The nature CRDTs makes it possible to perform updates from any node without coordination.
+The nature of CRDTs makes it possible to perform updates from any node without coordination.
 Concurrent updates from different nodes will automatically be resolved by the monotonic
 merge function, which all data types must provide. The state changes always converge.
 Several useful data types for counters, sets, maps and registers are provided and
@@ -310,7 +307,9 @@ from other nodes might not be visible yet.
 When using @scala[`WriteLocal`]@java[`writeLocal`] the update is only written to the local replica and then disseminated
 in the background with the gossip protocol, which can take few seconds to spread to all nodes.
 
-使用`WriteLocal`时，更新仅写入本地副本，然后使用gossip协议在后台传播，这可能需要几秒钟才能传播到所有节点。
+When using `ReadLocal`, you will never receive a `GetFailure` response, since the local replica is always available to
+local readers. `WriteLocal` however may still reply with `UpdateFailure` messages, in the event that the `modify` function
+threw an exception, or, if using durable storage, if storing failed.
 
 `WriteAll` and `ReadAll` is the strongest consistency level, but also the slowest and with
 lowest availability. For example, it is enough that one node is unavailable for a `Get` request

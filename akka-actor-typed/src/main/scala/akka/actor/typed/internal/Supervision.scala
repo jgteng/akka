@@ -30,13 +30,14 @@ import akka.util.unused
  */
 @InternalApi private[akka] object Supervisor {
   def apply[T, Thr <: Throwable: ClassTag](initialBehavior: Behavior[T], strategy: SupervisorStrategy): Behavior[T] = {
+
     strategy match {
       case r: RestartOrBackoff =>
-        Behaviors.intercept[T, T](new RestartSupervisor(initialBehavior, r))(initialBehavior)
+        Behaviors.intercept[T, T](() => new RestartSupervisor(initialBehavior, r))(initialBehavior)
       case r: Resume =>
-        Behaviors.intercept[T, T](new ResumeSupervisor(r))(initialBehavior)
+        Behaviors.intercept[T, T](() => new ResumeSupervisor(r))(initialBehavior)
       case r: Stop =>
-        Behaviors.intercept[T, T](new StopSupervisor(initialBehavior, r))(initialBehavior)
+        Behaviors.intercept[T, T](() => new StopSupervisor(initialBehavior, r))(initialBehavior)
     }
   }
 }
@@ -76,7 +77,13 @@ private abstract class AbstractSupervisor[O, I, Thr <: Throwable](strategy: Supe
   def log(ctx: TypedActorContext[_], t: Throwable): Unit = {
     if (strategy.loggingEnabled) {
       val unwrapped = UnstashException.unwrap(t)
-      ctx.asScala.log.error(unwrapped, "Supervisor {} saw failure: {}", this, unwrapped.getMessage)
+      strategy.logLevel match {
+        case Logging.ErrorLevel =>
+          ctx.asScala.log.error(unwrapped, "Supervisor {} saw failure: {}", this, unwrapped.getMessage)
+        case Logging.WarningLevel =>
+          ctx.asScala.log.warning(unwrapped, "Supervisor {} saw failure: {}", this, unwrapped.getMessage)
+        case level => ctx.asScala.log.log(level, "Supervisor {} saw failure: {}", this, unwrapped.getMessage)
+      }
     }
   }
 
@@ -106,7 +113,7 @@ private abstract class SimpleSupervisor[T, Thr <: Throwable: ClassTag](ss: Super
 
   protected def handleException(@unused ctx: TypedActorContext[T]): Catcher[Behavior[T]] = {
     case NonFatal(t) if isInstanceOfTheThrowableClass(t) =>
-      Behavior.failed(t)
+      BehaviorImpl.failed(t)
   }
 
   // convenience if target not required to handle exception
@@ -124,7 +131,7 @@ private class StopSupervisor[T, Thr <: Throwable: ClassTag](@unused initial: Beh
   override def handleException(ctx: TypedActorContext[T]): Catcher[Behavior[T]] = {
     case NonFatal(t) if isInstanceOfTheThrowableClass(t) =>
       log(ctx, t)
-      Behavior.failed(t)
+      BehaviorImpl.failed(t)
   }
 }
 
@@ -229,7 +236,7 @@ private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behav
           if (current == restartCount) {
             restartCount = 0
           }
-          Behavior.same
+          BehaviorImpl.same
         } else {
           // ResetRestartCount from nested Backoff strategy
           target(ctx, msg.asInstanceOf[T])
@@ -255,6 +262,7 @@ private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behav
       ctx: TypedActorContext[O],
       @unused target: PreStartTarget[T]): Catcher[Behavior[T]] = {
     case NonFatal(t) if isInstanceOfTheThrowableClass(t) =>
+      ctx.asScala.cancelAllTimers()
       strategy match {
         case _: Restart =>
           // if unlimited restarts then don't restart if starting fails as it would likely be an infinite restart loop
@@ -288,12 +296,13 @@ private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behav
 
   private def handleException(ctx: TypedActorContext[O], signalRestart: Throwable => Unit): Catcher[Behavior[T]] = {
     case NonFatal(t) if isInstanceOfTheThrowableClass(t) =>
+      ctx.asScala.cancelAllTimers()
       if (strategy.maxRestarts != -1 && restartCount >= strategy.maxRestarts && deadlineHasTimeLeft) {
         strategy match {
           case _: Restart => throw t
           case _: Backoff =>
             log(ctx, t)
-            Behavior.failed(t)
+            BehaviorImpl.failed(t)
         }
 
       } else {
@@ -336,6 +345,9 @@ private class RestartSupervisor[O, T, Thr <: Throwable: ClassTag](initial: Behav
   }
 
   private def restartCompleted(ctx: TypedActorContext[O]): Behavior[T] = {
+    // probably already done, but doesn't hurt to make sure they are canceled
+    ctx.asScala.cancelAllTimers()
+
     strategy match {
       case backoff: Backoff =>
         gotScheduledRestart = false

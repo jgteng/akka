@@ -43,7 +43,7 @@ class LazySinkSpec extends StreamSpec {
       sourceSub.expectRequest(1)
       sourceSub.sendNext(0)
       sourceSub.expectRequest(1)
-      sourceProbe.expectNoMsg(200.millis)
+      sourceProbe.expectNoMessage(200.millis)
       a[TimeoutException] shouldBe thrownBy { Await.result(futureProbe, remainingOrDefault) }
 
       p.success(TestSink.probe[Int])
@@ -128,7 +128,7 @@ class LazySinkSpec extends StreamSpec {
         }
       }
 
-      val result = Source(List("whatever")).runWith(Sink.lazyInitAsync[String, NotUsed](() ⇒ {
+      val result = Source(List("whatever")).runWith(Sink.lazyInitAsync[String, NotUsed](() => {
         Future.successful(Sink.fromGraph(FailingInnerMat))
       }))
 
@@ -139,8 +139,8 @@ class LazySinkSpec extends StreamSpec {
     "lazily propagate failure" in {
       case object MyException extends Exception
       val lazyMatVal = Source(List(1))
-        .concat(Source.lazily(() ⇒ Source.failed(MyException)))
-        .runWith(Sink.lazyInitAsync(() ⇒ Future.successful(Sink.seq[Int])))
+        .concat(Source.lazily(() => Source.failed(MyException)))
+        .runWith(Sink.lazyInitAsync(() => Future.successful(Sink.seq[Int])))
 
       // lazy init async materialized a sink, so we should have a some here
       val innerMatVal: Future[immutable.Seq[Int]] = lazyMatVal.futureValue.get

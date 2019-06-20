@@ -16,10 +16,11 @@ import akka.testkit.EventFilter
 import akka.actor.testkit.typed.scaladsl._
 import akka.actor.testkit.typed._
 import org.scalatest.{ Matchers, WordSpec, WordSpecLike }
+
 import scala.util.control.NoStackTrace
 import scala.concurrent.duration._
-
 import akka.actor.typed.SupervisorStrategy.Resume
+import akka.event.Logging
 
 object SupervisionSpec {
 
@@ -295,7 +296,7 @@ class SupervisionSpec extends ScalaTestWithActorTestKit("""
     def behv =
       supervise(setup[Command] { _ =>
         probe.ref ! StartFailed
-        throw new TestException("construction failed")
+        throw TestException("construction failed")
       }).onFailure[IllegalArgumentException](strategy)
   }
 
@@ -308,6 +309,16 @@ class SupervisionSpec extends ScalaTestWithActorTestKit("""
       probe.expectMessage(Pong(1))
     }
 
+    "default to stop when no strategy" in {
+      val probe = TestProbe[Event]("evt")
+      val behv = targetBehavior(probe.ref)
+      val ref = spawn(behv)
+      EventFilter[Exc3](occurrences = 1).intercept {
+        ref ! Throw(new Exc3)
+        probe.expectMessage(ReceivedSignal(PostStop))
+        probe.expectTerminated(ref)
+      }
+    }
     "stop when strategy is stop" in {
       val probe = TestProbe[Event]("evt")
       val behv = Behaviors.supervise(targetBehavior(probe.ref)).onFailure[Throwable](SupervisorStrategy.stop)
@@ -315,6 +326,7 @@ class SupervisionSpec extends ScalaTestWithActorTestKit("""
       EventFilter[Exc3](occurrences = 1).intercept {
         ref ! Throw(new Exc3)
         probe.expectMessage(ReceivedSignal(PostStop))
+        probe.expectTerminated(ref)
       }
     }
 
@@ -1084,15 +1096,16 @@ class SupervisionSpec extends ScalaTestWithActorTestKit("""
         case "boom" => throw TestException("boom indeed")
         case "switch" =>
           supervise[String](setup(_ =>
-            supervise[String](Behaviors.intercept(whateverInterceptor)(supervise[String](Behaviors.receiveMessage {
-              case "boom" => throw TestException("boom indeed")
-              case "ping" =>
-                probe.ref ! "pong"
-                Behaviors.same
-              case "give me stacktrace" =>
-                probe.ref ! new RuntimeException().getStackTrace.toVector
-                Behaviors.stopped
-            }).onFailure[RuntimeException](SupervisorStrategy.resume)))
+            supervise[String](
+              Behaviors.intercept(() => whateverInterceptor)(supervise[String](Behaviors.receiveMessage {
+                case "boom" => throw TestException("boom indeed")
+                case "ping" =>
+                  probe.ref ! "pong"
+                  Behaviors.same
+                case "give me stacktrace" =>
+                  probe.ref ! new RuntimeException().getStackTrace.toVector
+                  Behaviors.stopped
+              }).onFailure[RuntimeException](SupervisorStrategy.resume)))
               .onFailure[IllegalArgumentException](SupervisorStrategy.restart.withLimit(23, 10.seconds))))
             .onFailure[RuntimeException](SupervisorStrategy.restart)
       }).onFailure[RuntimeException](SupervisorStrategy.stop)
@@ -1196,6 +1209,30 @@ class SupervisionSpec extends ScalaTestWithActorTestKit("""
       }
       actor ! "ping"
       probe.expectMessage("pong")
+    }
+
+    "log exceptions when logging is enabled and provided log level matches" in {
+      val probe = TestProbe[Event]("evt")
+      val behv = Behaviors
+        .supervise(targetBehavior(probe.ref))
+        .onFailure[Exc1](SupervisorStrategy.restart.withLoggingEnabled(true).withLogLevel(Logging.InfoLevel))
+      val ref = spawn(behv)
+      EventFilter.info(pattern = "exc-1", source = ref.path.toString, occurrences = 1).intercept {
+        ref ! Throw(new Exc1)
+        probe.expectMessage(ReceivedSignal(PreRestart))
+      }
+    }
+
+    "do not log exceptions when logging is enabled and provided log level does not match" in {
+      val probe = TestProbe[Event]("evt")
+      val behv = Behaviors
+        .supervise(targetBehavior(probe.ref))
+        .onFailure[Exc1](SupervisorStrategy.restart.withLoggingEnabled(true).withLogLevel(Logging.DebugLevel))
+      val ref = spawn(behv)
+      EventFilter.info(pattern = "exc-1", source = ref.path.toString, occurrences = 0).intercept {
+        ref ! Throw(new Exc1)
+        probe.expectMessage(ReceivedSignal(PreRestart))
+      }
     }
 
   }

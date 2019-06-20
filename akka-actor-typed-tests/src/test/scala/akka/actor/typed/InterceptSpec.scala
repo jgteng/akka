@@ -18,6 +18,26 @@ import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 object InterceptSpec {
   final case class Msg(hello: String, replyTo: ActorRef[String])
   case object MyPoisonPill
+
+  class SameTypeInterceptor extends BehaviorInterceptor[String, String] {
+    import BehaviorInterceptor._
+    override def aroundReceive(
+        context: TypedActorContext[String],
+        message: String,
+        target: ReceiveTarget[String]): Behavior[String] = {
+      target(context, message)
+    }
+
+    override def aroundSignal(
+        context: TypedActorContext[String],
+        signal: Signal,
+        target: SignalTarget[String]): Behavior[String] = {
+      target(context, signal)
+    }
+
+    override def isSame(other: BehaviorInterceptor[Any, Any]): Boolean =
+      other.isInstanceOf[SameTypeInterceptor]
+  }
 }
 
 class InterceptSpec extends ScalaTestWithActorTestKit("""
@@ -57,7 +77,7 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
       val probe = TestProbe[String]()
       val interceptor = snitchingInterceptor(probe.ref)
 
-      val ref: ActorRef[String] = spawn(Behaviors.intercept(interceptor)(Behaviors.receiveMessage[String] { m =>
+      val ref: ActorRef[String] = spawn(Behaviors.intercept(() => interceptor)(Behaviors.receiveMessage[String] { m =>
         probe.ref ! s"actual behavior $m"
         Behaviors.same
       }))
@@ -75,10 +95,10 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
 
       val interceptor = snitchingInterceptor(probe.ref)
       def intercept(beh: Behavior[String]): Behavior[String] =
-        Behaviors.intercept(interceptor)(beh)
+        Behaviors.intercept(() => interceptor)(beh)
 
       val beh: Behavior[String] =
-        intercept(intercept(Behaviors.receiveMessage(m => Behaviors.same)))
+        intercept(intercept(Behaviors.receiveMessage(_ => Behaviors.same)))
 
       val ref = spawn(beh)
 
@@ -93,7 +113,7 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
 
       val interceptor = snitchingInterceptor(probe.ref)
       def next(count: Int): Behavior[String] =
-        Behaviors.intercept(interceptor)(Behaviors.receiveMessage(m => next(count + 1)))
+        Behaviors.intercept(() => interceptor)(Behaviors.receiveMessage(_ => next(count + 1)))
 
       val ref = spawn(next(1))
 
@@ -117,10 +137,10 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
 
       def intercept(beh: Behavior[String]): Behavior[String] =
         // a new interceptor instance every call
-        Behaviors.intercept(snitchingInterceptor(probe.ref))(beh)
+        Behaviors.intercept(() => snitchingInterceptor(probe.ref))(beh)
 
       val beh: Behavior[String] =
-        intercept(intercept(Behaviors.receiveMessage(m => Behaviors.same)))
+        intercept(intercept(Behaviors.receiveMessage(_ => Behaviors.same)))
 
       val ref = spawn(beh)
 
@@ -138,7 +158,7 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
       def next(count: Int): Behavior[String] =
         Behaviors.intercept(
           // a new instance every "recursion"
-          snitchingInterceptor(probe.ref))(Behaviors.receiveMessage(m => next(count + 1)))
+          () => snitchingInterceptor(probe.ref))(Behaviors.receiveMessage(_ => next(count + 1)))
 
       val ref = spawn(next(1))
 
@@ -176,7 +196,7 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
       }
 
       val innerBehaviorStarted = new AtomicBoolean(false)
-      val ref = spawn(Behaviors.intercept(interceptor)(Behaviors.setup { context =>
+      val ref = spawn(Behaviors.intercept(() => interceptor)(Behaviors.setup { _ =>
         innerBehaviorStarted.set(true)
         Behaviors.unhandled[String]
       }))
@@ -190,7 +210,7 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
       val probe = TestProbe[String]()
       val interceptor = snitchingInterceptor(probe.ref)
 
-      val ref: ActorRef[String] = spawn(Behaviors.intercept(interceptor)(Behaviors.setup { _ =>
+      val ref: ActorRef[String] = spawn(Behaviors.intercept(() => interceptor)(Behaviors.setup { _ =>
         var count = 0
         Behaviors.receiveMessage[String] { m =>
           count += 1
@@ -215,7 +235,7 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
       val interceptor = snitchingInterceptor(probe.ref)
 
       def next(count1: Int): Behavior[String] = {
-        Behaviors.intercept(interceptor)(Behaviors.setup { _ =>
+        Behaviors.intercept(() => interceptor)(Behaviors.setup { _ =>
           var count2 = 0
           Behaviors.receiveMessage[String] { m =>
             count2 += 1
@@ -248,7 +268,7 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
       val interceptor = snitchingInterceptor(probe.ref)
 
       EventFilter[ActorInitializationException](occurrences = 1).intercept {
-        val ref = spawn(Behaviors.intercept(interceptor)(Behaviors.setup[String] { _ =>
+        val ref = spawn(Behaviors.intercept(() => interceptor)(Behaviors.setup[String] { _ =>
           Behaviors.same[String]
         }))
         probe.expectTerminated(ref, probe.remainingOrDefault)
@@ -284,7 +304,7 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
       }
 
       val decorated: Behavior[Msg] =
-        Behaviors.intercept(poisonInterceptor)(inner(0)).narrow
+        Behaviors.intercept(() => poisonInterceptor)(inner(0)).narrow
 
       val ref = spawn(decorated)
       val probe = TestProbe[String]()
@@ -325,7 +345,7 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
       }
 
       val probe = TestProbe[Message]()
-      val ref = spawn(Behaviors.intercept(partialInterceptor)(Behaviors.receiveMessage { msg =>
+      val ref = spawn(Behaviors.intercept(() => partialInterceptor)(Behaviors.receiveMessage { msg =>
         probe.ref ! msg
         Behaviors.same
       }))
@@ -359,7 +379,7 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
         }
       }
 
-      val ref = spawn(Behaviors.intercept(postStopInterceptor)(Behaviors.receiveMessage[String] { _ =>
+      val ref = spawn(Behaviors.intercept(() => postStopInterceptor)(Behaviors.receiveMessage[String] { _ =>
         Behaviors.stopped { () =>
           probe.ref ! "callback-post-stop"
         }
@@ -370,6 +390,33 @@ class InterceptSpec extends ScalaTestWithActorTestKit("""
         probe.expectMessage("interceptor-post-stop") // previous behavior when stopping get the signal
         probe.expectMessage("callback-post-stop")
       }
+    }
+
+    "not grow stack when nesting same interceptor" in {
+      def next(n: Int, p: ActorRef[Array[StackTraceElement]]): Behavior[String] = {
+        Behaviors.intercept(() => new SameTypeInterceptor) {
+
+          Behaviors.receiveMessage { _ =>
+            if (n == 20) {
+              val e = new RuntimeException().fillInStackTrace()
+              val trace = e.getStackTrace
+              p ! trace
+              Behaviors.stopped
+            } else {
+              next(n + 1, p)
+            }
+          }
+        }
+      }
+
+      val probe = TestProbe[Array[StackTraceElement]]()
+      val ref = spawn(next(0, probe.ref))
+      (1 to 21).foreach { n =>
+        ref ! n.toString
+      }
+      val elements = probe.receiveMessage()
+      if (elements.count(_.getClassName == "SameTypeInterceptor") > 1)
+        fail(s"Stack contains SameTypeInterceptor more than once: \n${elements.mkString("\n\t")}")
     }
   }
 

@@ -4,16 +4,18 @@
 
 package akka.cluster.ddata.typed.scaladsl
 
+import scala.util.Failure
+import scala.util.Success
+
 import org.scalatest.WordSpecLike
 import akka.actor.testkit.typed.TestKitSettings
 import akka.cluster.ddata.SelfUniqueAddress
 
 // #sample
-import akka.actor.Scheduler
+import akka.actor.typed.Scheduler
 import akka.actor.typed.{ ActorRef, Behavior }
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
-import akka.cluster.Cluster
 import akka.cluster.ddata.typed.scaladsl.Replicator._
 import akka.cluster.ddata.{ GCounter, GCounterKey }
 import akka.actor.testkit.typed.scaladsl._
@@ -29,7 +31,7 @@ object ReplicatorSpec {
 
   val config = ConfigFactory.parseString("""
     akka.actor.provider = "cluster"
-    akka.remote.netty.tcp.port = 0
+    akka.remote.classic.netty.tcp.port = 0
     akka.remote.artery.canonical.port = 0
     akka.remote.artery.canonical.hostname = 127.0.0.1
     """)
@@ -41,7 +43,8 @@ object ReplicatorSpec {
   final case class GetCachedValue(replyTo: ActorRef[Int]) extends ClientCommand
   private sealed trait InternalMsg extends ClientCommand
   private case class InternalUpdateResponse(rsp: Replicator.UpdateResponse[GCounter]) extends InternalMsg
-  private case class InternalGetResponse(rsp: Replicator.GetResponse[GCounter]) extends InternalMsg
+  private case class InternalGetResponse(rsp: Replicator.GetResponse[GCounter], replyTo: ActorRef[Int])
+      extends InternalMsg
   private case class InternalChanged(chg: Replicator.Changed[GCounter]) extends InternalMsg
 
   val Key = GCounterKey("counter")
@@ -51,46 +54,48 @@ object ReplicatorSpec {
       val updateResponseAdapter: ActorRef[Replicator.UpdateResponse[GCounter]] =
         ctx.messageAdapter(InternalUpdateResponse.apply)
 
-      val getResponseAdapter: ActorRef[Replicator.GetResponse[GCounter]] =
-        ctx.messageAdapter(InternalGetResponse.apply)
-
       val changedAdapter: ActorRef[Replicator.Changed[GCounter]] =
         ctx.messageAdapter(InternalChanged.apply)
 
       replicator ! Replicator.Subscribe(Key, changedAdapter)
 
+      implicit val askTimeout: Timeout = Timeout(10.seconds)
+
       def behavior(cachedValue: Int): Behavior[ClientCommand] = {
-        Behaviors.receive[ClientCommand] { (ctx, msg) =>
-          msg match {
-            case Increment =>
-              replicator ! Replicator.Update(Key, GCounter.empty, Replicator.WriteLocal, updateResponseAdapter)(_ :+ 1)
-              Behaviors.same
+        Behaviors.receiveMessage[ClientCommand] {
+          case Increment =>
+            replicator ! Replicator.Update(Key, GCounter.empty, Replicator.WriteLocal, updateResponseAdapter)(_ :+ 1)
+            Behaviors.same
 
-            case GetValue(replyTo) =>
-              replicator ! Replicator.Get(Key, Replicator.ReadLocal, getResponseAdapter, Some(replyTo))
-              Behaviors.same
+          case GetValue(replyTo) =>
+            ctx.ask[Replicator.Get[GCounter], Replicator.GetResponse[GCounter]](replicator)(askReplyTo =>
+              Replicator.Get(Key, Replicator.ReadLocal, askReplyTo)) {
+              case Success(value) => InternalGetResponse(value, replyTo)
+              case Failure(ex)    => throw ex // unexpected ask timeout
+            }
 
-            case GetCachedValue(replyTo) =>
-              replyTo ! cachedValue
-              Behaviors.same
+            Behaviors.same
 
-            case internal: InternalMsg =>
-              internal match {
-                case InternalUpdateResponse(_) => Behaviors.same // ok
+          case GetCachedValue(replyTo) =>
+            replyTo ! cachedValue
+            Behaviors.same
 
-                case InternalGetResponse(rsp @ Replicator.GetSuccess(Key, Some(replyTo: ActorRef[Int] @unchecked))) =>
-                  val value = rsp.get(Key).value.toInt
-                  replyTo ! value
-                  Behaviors.same
+          case internal: InternalMsg =>
+            internal match {
+              case InternalUpdateResponse(_) => Behaviors.same // ok
 
-                case InternalGetResponse(rsp) =>
-                  Behaviors.unhandled // not dealing with failures
+              case InternalGetResponse(rsp @ Replicator.GetSuccess(Key), replyTo) =>
+                val value = rsp.get(Key).value.toInt
+                replyTo ! value
+                Behaviors.same
 
-                case InternalChanged(chg @ Replicator.Changed(Key)) =>
-                  val value = chg.get(Key).value.intValue
-                  behavior(value)
-              }
-          }
+              case InternalGetResponse(_, _) =>
+                Behaviors.unhandled // not dealing with failures
+
+              case InternalChanged(chg @ Replicator.Changed(Key)) =>
+                val value = chg.get(Key).value.intValue
+                behavior(value)
+            }
         }
       }
 
@@ -103,12 +108,12 @@ object ReplicatorSpec {
       val replicator: ActorRef[Replicator.Command] = ???
       implicit val timeout = Timeout(3.seconds)
       implicit val scheduler: Scheduler = ???
-      implicit val cluster: Cluster = ???
+      implicit val cluster: SelfUniqueAddress = ???
 
       val reply1: Future[GetResponse[GCounter]] = replicator.ask(Replicator.Get(Key, Replicator.ReadLocal))
 
       val reply2: Future[UpdateResponse[GCounter]] =
-        replicator.ask(Replicator.Update(Key, GCounter.empty, Replicator.WriteLocal)(_ + 1))
+        replicator.ask(Replicator.Update(Key, GCounter.empty, Replicator.WriteLocal)(_ :+ 1))
 
       val reply3: Future[DeleteResponse[GCounter]] = replicator.ask(Replicator.Delete(Key, Replicator.WriteLocal))
 
@@ -116,6 +121,36 @@ object ReplicatorSpec {
 
       // suppress unused compiler warnings
       println("" + reply1 + reply2 + reply3 + reply4)
+    }
+
+    def shouldHaveUnapplyForResponseTypes(): Unit = {
+      val getResponse: GetResponse[GCounter] = ???
+      getResponse match {
+        case GetSuccess(Key) =>
+        case GetFailure(Key) =>
+        case NotFound(Key)   =>
+      }
+
+      val updateResponse: UpdateResponse[GCounter] = ???
+      updateResponse match {
+        case UpdateSuccess(Key)       =>
+        case ModifyFailure(Key, _, _) =>
+        case UpdateTimeout(Key)       =>
+        case StoreFailure(Key)        =>
+        case UpdateFailure(Key)       =>
+      }
+
+      val deleteResponse: DeleteResponse[GCounter] = ???
+      deleteResponse match {
+        case DeleteSuccess(Key)            =>
+        case ReplicationDeleteFailure(Key) =>
+        case DataDeleted(Key)              =>
+      }
+
+      val replicaCount: ReplicaCount = ???
+      replicaCount match {
+        case ReplicaCount(_) =>
+      }
     }
   }
 

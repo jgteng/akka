@@ -10,7 +10,7 @@ import akka.actor.typed.*;
 import akka.testkit.AkkaSpec;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.scalatestplus.junit.JUnitSuite;
+import org.scalatest.junit.JUnitSuite;
 
 public class InterceptTest extends JUnitSuite {
 
@@ -40,7 +40,7 @@ public class InterceptTest extends JUnitSuite {
     ActorRef<String> ref =
         testKit.spawn(
             Behaviors.intercept(
-                interceptor,
+                () -> interceptor,
                 Behaviors.receiveMessage(
                     (String msg) -> {
                       probe.getRef().tell(msg);
@@ -87,7 +87,7 @@ public class InterceptTest extends JUnitSuite {
     ActorRef<Message> ref =
         testKit.spawn(
             Behaviors.intercept(
-                interceptor,
+                () -> interceptor,
                 Behaviors.receiveMessage(
                     (Message msg) -> {
                       probe.getRef().tell(msg);

@@ -19,9 +19,9 @@ To use Cluster Client, you must add the following dependency in your project:
 ## 介绍
 
 An actor system that is not part of the cluster can communicate with actors
-somewhere in the cluster via the @unidoc[ClusterClient], the client can run in an `ActorSystem` that is part of
+somewhere in the cluster via the @apidoc[ClusterClient], the client can run in an `ActorSystem` that is part of
 another cluster. It only needs to know the location of one (or more) nodes to use as initial
-contact points. It will establish a connection to a @unidoc[akka.cluster.client.ClusterReceptionist] somewhere in
+contact points. It will establish a connection to a @apidoc[akka.cluster.client.ClusterReceptionist] somewhere in
 the cluster. It will monitor the connection to the receptionist and establish a new
 connection if the link goes down. When looking for a new receptionist it uses fresh
 contact points retrieved from previous establishment, or periodically refreshed contacts,
@@ -33,19 +33,19 @@ i.e. not necessarily the initial contact points.
 并在链路断开时建立新连接。当查找receptionist时，它使用从先前建立连接的联系点来检索新的接触点（节点），
 或者定期刷新联系人（contacts），即receptionist可能不在初始联系点上。
 
-Using the @unidoc[ClusterClient] for communicating with a cluster from the outside requires that the system with the client
+Using the @apidoc[ClusterClient] for communicating with a cluster from the outside requires that the system with the client
 can both connect and be connected to with Akka Remoting from all the nodes in the cluster with a receptionist.
-This creates a tight coupling in that the client and cluster systems may need to have the same version of
-both Akka, libraries, message classes, serializers and potentially even the JVM. In many cases it is a better solution
-to use a more explicit and decoupling protocol such as [HTTP](https://doc.akka.io/docs/akka-http/current/index.html) or
-[gRPC](https://developer.lightbend.com/docs/akka-grpc/current/).
+This creates a tight coupling in that the client and cluster systems may need to have the same version of 
+both Akka, libraries, message classes, serializers and potentially even the JVM. In many cases it is a better solution 
+to use a more explicit and decoupling protocol such as [HTTP](https://doc.akka.io/docs/akka-http/current/index.html) or 
+[gRPC](https://doc.akka.io/docs/akka-grpc/current/).
 
 Additionally since Akka Remoting is primarily designed as a protocol for Akka Cluster there is no explicit resource
-management, when a @unidoc[ClusterClient] has been used it will cause connections with the cluster until the ActorSystem is
-stopped (unlike other kinds of network clients).
+management, when a @apidoc[ClusterClient] has been used it will cause connections with the cluster until the ActorSystem is 
+stopped (unlike other kinds of network clients). 
 
-@unidoc[ClusterClient] should not be used when sending messages to actors that run
-within the same cluster. Similar functionality as the @unidoc[ClusterClient] is
+@apidoc[ClusterClient] should not be used when sending messages to actors that run
+within the same cluster. Similar functionality as the @apidoc[ClusterClient] is
 provided in a more efficient way by @ref:[Distributed Publish Subscribe in Cluster](distributed-pub-sub.md) for actors that
 belong to the same cluster.
 
@@ -58,36 +58,26 @@ the cluster client.
 此外，请注意在使用集群客户端时需要将`akka.actor.provider`从`local`改为`remote`或`cluster`。
 
 The receptionist is supposed to be started on all nodes, or all nodes with specified role,
-in the cluster. The receptionist can be started with the @unidoc[akka.cluster.client.ClusterReceptionist] extension
+in the cluster. The receptionist can be started with the @apidoc[akka.cluster.client.ClusterReceptionist] extension
 or as an ordinary actor.
 
 receptionist应该在集群中的所有节点或指定角色的节点上启动。
-receptionist可以使用 @unidoc[akka.cluster.client.ClusterReceptionist] 扩展或作为普通actor来启动。
+receptionist可以使用 @apidoc[akka.cluster.client.ClusterReceptionist] 扩展或作为普通actor来启动。
 
-You can send messages via the @unidoc[ClusterClient] to any actor in the cluster that is registered
-in the @unidoc[DistributedPubSubMediator] used by the @unidoc[akka.cluster.client.ClusterReceptionist].
-The @unidoc[ClusterClientReceptionist] provides methods for registration of actors that
+You can send messages via the @apidoc[ClusterClient] to any actor in the cluster that is registered
+in the @apidoc[DistributedPubSubMediator] used by the @apidoc[akka.cluster.client.ClusterReceptionist].
+The @apidoc[ClusterClientReceptionist] provides methods for registration of actors that
 should be reachable from the client. Messages are wrapped in `ClusterClient.Send`,
 @scala[@scaladoc[`ClusterClient.SendToAll`](akka.cluster.client.ClusterClient$)]@java[`ClusterClient.SendToAll`] or @scala[@scaladoc[`ClusterClient.Publish`](akka.cluster.client.ClusterClient$)]@java[`ClusterClient.Publish`].
 
-你可以通过 @unidoc[ClusterClient] 将消息发送到 @unidoc[akka.cluster.client.ClusterReceptionist] 使用的
-@unidoc[DistributedPubSubMediator] 中注册的集群的任何actor。
-@unidoc[ClusterClientReceptionist] 提供了可以从客户端访问actor的注册方法。消息被包含在 `ClusterClient.Send`，
-@scaladoc[`ClusterClient.SendToAll`](akka.cluster.client.clusterClient$) 或
-@scaladoc[`ClusterClient.Publish`](akka.cluster.client.ClusterClient$) 中。
-
-Both the @unidoc[ClusterClient] and the @unidoc[ClusterClientReceptionist] emit events that can be subscribed to.
-The @unidoc[ClusterClient] sends out notifications in relation to having received a list of contact points
-from the @unidoc[ClusterClientReceptionist]. One use of this list might be for the client to record its
+Both the @apidoc[ClusterClient] and the @apidoc[ClusterClientReceptionist] emit events that can be subscribed to.
+The @apidoc[ClusterClient] sends out notifications in relation to having received a list of contact points
+from the @apidoc[ClusterClientReceptionist]. One use of this list might be for the client to record its
 contact points. A client that is restarted could then use this information to supersede any previously
 configured contact points.
 
-@unidoc[ClusterClient] 和 @unidoc[ClusterClientReceptionist] 都发出可以订阅的事件。@unidoc[ClusterClient] 发送与从
-@unidoc[ClusterClientReceptionist] 接收到联系点列表有关的通知。此列表的一个用途可能是客户端记录其联系点。
-然后，重新启动的客户端可以使用此信息来取代之前配置的任何联系点。
-
-The @unidoc[ClusterClientReceptionist] sends out notifications in relation to having received a contact
-from a @unidoc[ClusterClient]. This notification enables the server containing the receptionist to become aware of
+The @apidoc[ClusterClientReceptionist] sends out notifications in relation to having received a contact
+from a @apidoc[ClusterClient]. This notification enables the server containing the receptionist to become aware of
 what clients are connected.
 
 @unidoc[ClusterClientReceptionist] 发出与从 @unidoc[ClusterClient] 接收联系有关的通知。
@@ -132,16 +122,16 @@ to avoid inbound connections from other cluster nodes to the client:
 * 目的actor看到的 @scaladoc[`sender()`](akka.actor.Actor) 不是客户端，而是receptionist
 * 从目的actor发回并由客户端看到响应消息的 @scaladoc[`sender()`](akka.actor.Actor) 是 `deadLetters`
   
-since the client should normally send subsequent messages via the @unidoc[ClusterClient].
+since the client should normally send subsequent messages via the @apidoc[ClusterClient].
 It is possible to pass the original sender inside the reply messages if
 the client is supposed to communicate directly to the actor in the cluster.
 
 因为客户端通常应该通过 @unidoc[ClusterClient] 发送后续消息。如果客户端应该直接与集群中的actor通信，
 则可以在回复消息中传递原始发送者。
 
-While establishing a connection to a receptionist the @unidoc[ClusterClient] will buffer
+While establishing a connection to a receptionist the @apidoc[ClusterClient] will buffer
 messages and send them when the connection is established. If the buffer is full
-the @unidoc[ClusterClient] will drop old messages when new messages are sent via the client.
+the @apidoc[ClusterClient] will drop old messages when new messages are sent via the client.
 The size of the buffer is configurable and it can be disabled by using a buffer size of 0.
 
 在建立与receptionist的连接时， @unidoc[ClusterClient] 将缓冲消息并在建立连接时发送消息。如果缓冲区已满，
@@ -177,7 +167,7 @@ Scala
 Java
 :  @@snip [ClusterClientTest.java](/akka-cluster-tools/src/test/java/akka/cluster/client/ClusterClientTest.java) { #server }
 
-On the client you create the @unidoc[ClusterClient] actor and use it as a gateway for sending
+On the client you create the @apidoc[ClusterClient] actor and use it as a gateway for sending
 messages to the actors identified by their path (without address information) somewhere
 in the cluster.
 
@@ -224,7 +214,7 @@ different receptionists at the same time, serving different types of clients.
 这很方便，也很完美，但是知道可以将`akka.cluster.client.ClusterReceptionist` 演员作为一个普通演员开始并且你可以同时拥有几个不同的receptionist，
 服务不同客户的类型。
 
-Note that the @unidoc[ClusterClientReceptionist] uses the @unidoc[DistributedPubSub] extension, which is described
+Note that the @apidoc[ClusterClientReceptionist] uses the @apidoc[DistributedPubSub] extension, which is described
 in @ref:[Distributed Publish Subscribe in Cluster](distributed-pub-sub.md).
 
 请注意，@unidoc[ClusterClientReceptionist] 使用 @unidoc[DistributedPubSub] 扩展，该扩展在
@@ -243,9 +233,9 @@ akka.extensions = ["akka.cluster.client.ClusterClientReceptionist"]
 
 ## 事件
 
-As mentioned earlier, both the @unidoc[ClusterClient] and @unidoc[ClusterClientReceptionist] emit events that can be subscribed to.
+As mentioned earlier, both the @apidoc[ClusterClient] and @apidoc[ClusterClientReceptionist] emit events that can be subscribed to.
 The following code snippet declares an actor that will receive notifications on contact points (addresses to the available
-receptionists), as they become available. The code illustrates subscribing to the events and receiving the @unidoc[ClusterClient]
+receptionists), as they become available. The code illustrates subscribing to the events and receiving the @apidoc[ClusterClient]
 initial state.
 
 如前所述， @unidoc[ClusterClient] 和 @unidoc[ClusterClientReceptionist] 都会发出可以订阅的事件。
@@ -258,7 +248,7 @@ Scala
 Java
 :  @@snip [ClusterClientTest.java](/akka-cluster-tools/src/test/java/akka/cluster/client/ClusterClientTest.java) { #clientEventsListener }
 
-Similarly we can have an actor that behaves in a similar fashion for learning what cluster clients are connected to a @unidoc[ClusterClientReceptionist]:
+Similarly we can have an actor that behaves in a similar fashion for learning what cluster clients are connected to a @apidoc[ClusterClientReceptionist]:
 
 类似地，我们可以让一个actor以类似的方式运行，以了解哪些集群客户端连接到 @unidoc[ClusterClientReceptionist] ：
 
@@ -273,16 +263,16 @@ Java
 
 ## 配置
 
-The @unidoc[ClusterClientReceptionist] extension (or @unidoc[akka.cluster.client.ClusterReceptionistSettings]) can be configured
+The @apidoc[ClusterClientReceptionist] extension (or @apidoc[akka.cluster.client.ClusterReceptionistSettings]) can be configured
 with the following properties:
 
 可以使用以下属性配置 @unidoc[ClusterClientReceptionist] 扩展（或 @unidoc[akka.cluster.client.ClusterReceptionistSettings] ）：
 
 @@snip [reference.conf](/akka-cluster-tools/src/main/resources/reference.conf) { #receptionist-ext-config }
 
-The following configuration properties are read by the @unidoc[ClusterClientSettings]
-when created with a @scala[@scaladoc[`ActorSystem`](akka.actor.ActorSystem)]@java[@javadoc[`ActorSystem`](akka.actor.ActorSystem)] parameter. It is also possible to amend the @unidoc[ClusterClientSettings]
-or create it from another config section with the same layout as below. @unidoc[ClusterClientSettings] is
+The following configuration properties are read by the @apidoc[ClusterClientSettings]
+when created with a @scala[@scaladoc[`ActorSystem`](akka.actor.ActorSystem)]@java[@javadoc[`ActorSystem`](akka.actor.ActorSystem)] parameter. It is also possible to amend the @apidoc[ClusterClientSettings]
+or create it from another config section with the same layout as below. @apidoc[ClusterClientSettings] is
 a parameter to the @scala[@scaladoc[`ClusterClient.props`](akka.cluster.client.ClusterClient$)]@java[@javadoc[`ClusterClient.props`](akka.cluster.client.ClusterClient$)] factory method, i.e. each client can be configured
 with different settings if needed.
 

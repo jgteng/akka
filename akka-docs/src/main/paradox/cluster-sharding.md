@@ -200,7 +200,8 @@ Java
 @@@ div { .group-scala }
 
 A more comprehensive sample is available in the
-tutorial named [Akka Cluster Sharding with Scala!](https://github.com/typesafehub/activator-akka-cluster-sharding-scala).
+@java[@extref[Cluster Sharding example project](samples:akka-samples-cluster-sharding-java)]
+@scala[@extref[Cluster Sharding example project](samples:akka-samples-cluster-sharding-scala)].
 
 更详细的示例可在名为 [Akka Cluster Sharding with Scala！](https://github.com/typesafehub/activator-akka-cluster-sharding-scala) 的教程中找到。
 
@@ -270,8 +271,9 @@ Where `#` is a number to distinguish between instances as there are multiple in 
  1. Incoming message `M1` to `ShardRegion` instance `SR1`.
  2. `M1` is mapped to shard `S1`. `SR1` doesn't know about `S1`, so it asks the `SC` for the location of `S1`.
  3. `SC` answers that the home of `S1` is `SR1`.
- 4. `SR1` creates child actor for the entity `E1` and sends buffered messages for `S1` to `E1` child
- 5. All incoming messages for `S1` which arrive at `SR1` can be handled by `SR1` without `SC`. It creates entity children as needed, and forwards messages to them.
+ 4. `SR1` creates child actor shard `S1` and forwards the message to it.
+ 5. `S1` creates child actor for `E1` and forwards the message to it.
+ 6. All incoming messages for `S1` which arrive at `SR1` can be handled by `SR1` without `SC`. 
 
 #### 场景1：发送到本地 ShardRegion 的未知分片的消息
 
@@ -284,7 +286,7 @@ Where `#` is a number to distinguish between instances as there are multiple in 
 #### Scenario 2: Message to an unknown shard that belongs to a remote ShardRegion 
 
  1. Incoming message `M2` to `ShardRegion` instance `SR1`.
- 2. `M2` is mapped to `S2`. SR1 doesn't know about `S2`, so it asks `SC` for the location of `S2`.
+ 2. `M2` is mapped to `S2`. `SR1` doesn't know about `S2`, so it asks `SC` for the location of `S2`.
  3. `SC` answers that the home of `S2` is `SR2`.
  4. `SR1` sends buffered messages for `S2` to `SR2`.
  5. All incoming messages for `S2` which arrive at `SR1` can be handled by `SR1` without `SC`. It forwards messages to `SR2`.
@@ -556,12 +558,12 @@ Shard将缓冲传入的消息。此后，这些缓冲的消息被传递给该实
 
 ### 自动钝化
 
-The entities can be configured to be automatically passivated if they haven't received
-a message for a while using the `akka.cluster.sharding.passivate-idle-entity-after` setting,
+The entities are automatically passivated if they haven't received a message within the duration configured in
+`akka.cluster.sharding.passivate-idle-entity-after` 
 or by explicitly setting `ClusterShardingSettings.passivateIdleEntityAfter` to a suitable
 time to keep the actor alive. Note that only messages sent through sharding are counted, so direct messages
-to the `ActorRef` of the actor or messages that it sends to itself are not counted as activity. 
-By default automatic passivation is disabled. 
+to the `ActorRef` or messages that the actor sends to itself are not counted in this activity.
+Passivation can be disabled by setting `akka.cluster.sharding.passivate-idle-entity-after = off`.
 
 如果实体使用`akka.cluster.sharding.passivate-idle-entity-after`设置后，或者通过将
 `ClusterShardingSettings.passivateIdleEntityAfter`显式设置为适当的时间来保留一段时间，则可以活着的actor实体自动钝化。
@@ -602,10 +604,13 @@ the default directory contains the remote port of the actor system. If using a d
 assigned port (0) it will be different each time and the previously stored data will not
 be loaded.
 
-使用 [分布式数据模式](#cluster-sharding-mode) 时，实体的标识符存储在分布式数据的
-@ref:[持久存储](distributed-data.md#ddata-durable) 中。你可能希望更改
-`akka.cluster.sharding.distributed-data.durable.lmdb.dir`的配置，因为默认目录包含actor系统的远程端口。
-如果使用动态分配的端口（0），则每次都会有所不同，并且不会加载先前存储的数据。
+The reason for storing the identifiers of the active entities in durable storage, i.e. stored to
+disk, is that the same entities should be started also after a complete cluster restart. If this is not needed
+you can disable durable storage and benefit from better performance by using the following configuration:
+
+```
+akka.cluster.sharding.distributed-data.durable.keys = []
+```
 
 When `rememberEntities` is set to false, a `Shard` will not automatically restart any entities
 after a rebalance or recovering from a crash. Entities will only be started once the first message
@@ -827,3 +832,24 @@ When doing rolling upgrades special care must be taken to not change any of the 
  * 持久性模式
 
  If any one of these needs a change it will require a full cluster restart.
+ 
+
+## Lease
+
+A @ref[lease](coordination.md) can be used as an additional safety measure to ensure a shard 
+does not run on two nodes.
+
+Reasons for how this can happen:
+
+* Network partitions without an appropriate downing provider
+* Mistakes in the deployment process leading to two separate Akka Clusters
+* Timing issues between removing members from the Cluster on one side of a network partition and shutting them down on the other side
+
+A lease can be a final backup that means that each shard won't create child entity actors unless it has the lease. 
+
+To use a lease for sharding set `akka.cluster.sharding.use-lease` to the configuration location
+of the lease to use. Each shard will try and acquire a lease with with the name `<actor system name>-shard-<type name>-<shard id>` and
+the owner is set to the `Cluster(system).selfAddress.hostPort`.
+
+If a shard can't acquire a lease it will remain uninitialized so messages for entities it owns will
+be buffered in the `ShardRegion`. If the lease is lost after initialization the Shard will be terminated.

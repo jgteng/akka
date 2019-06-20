@@ -16,12 +16,8 @@ import akka.annotation.InternalApi
   def apply[T](
       behavior: () => Behavior[T],
       deploy: Props = Props.empty,
-      isGuardian: Boolean = false): akka.actor.Props = {
-    val props =
-      if (isGuardian)
-        akka.actor.Props(new GuardianActorAdapter(behavior()))
-      else
-        akka.actor.Props(new ActorAdapter(behavior()))
+      rethrowTypedFailure: Boolean = true): akka.actor.Props = {
+    val props = akka.actor.Props(new ActorAdapter(behavior(), rethrowTypedFailure))
 
     (deploy.firstOrElse[DispatcherSelector](DispatcherDefault()) match {
       case _: DispatcherDefault          => props

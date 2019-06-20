@@ -4,7 +4,6 @@
 
 package akka.actor.typed
 
-import akka.annotation.ApiMayChange
 import akka.annotation.DoNotInherit
 import akka.annotation.InternalApi
 
@@ -33,7 +32,6 @@ object Props {
  * Not for user extension.
  */
 @DoNotInherit
-@ApiMayChange
 abstract class Props private[akka] () extends Product with Serializable {
 
   /**
@@ -145,7 +143,7 @@ sealed abstract class DispatcherSelector extends Props
 
 /**
  * Factories for [[DispatcherSelector]]s which describe which thread pool shall be used to run
- * the actor to which this configuration is applied. Se the individual factory methods for details
+ * the actor to which this configuration is applied. See the individual factory methods for details
  * on the options.
  *
  * The default configuration if none of these options are present is to run

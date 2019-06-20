@@ -200,16 +200,10 @@ This means that user requests can be sent to `StatsService` on any node and it w
 
 这意味着可以将用户请求发送到任何节点上的`StatsService`，并且它（`StatsService`）将使用所有节点上的`StatsWorker`。
 
-The easiest way to run **Router Example with Group of Routees** example yourself is to download the ready to run
-@scala[@extref[Akka Cluster Sample with Scala](ecs:akka-samples-cluster-scala)]
-@java[@extref[Akka Cluster Sample with Java](ecs:akka-samples-cluster-java)]
-together with the tutorial. It contains instructions on how to run the **Router Example with Group of Routees** sample.
-The source code of this sample can be found in the
-@scala[@extref[Akka Samples Repository](samples:akka-sample-cluster-scala)]@java[@extref[Akka Samples Repository](samples:akka-sample-cluster-java)].
-
-使用 **使用路由组的路由器** 最简单的方法是下载带有教程的 @extref[Akka集群示例使用Scala](ecs:akka-samples-cluster-scala) 。
-它包含有关如何使用 **使用路由组的路由器** 示例的说明。该救命的源码可以在 @extref[Akka示例仓库](samples:akka-sample-cluster-scala) 找到。
-
+The easiest way to run **Router Example with Group of Routees** example yourself is to try the
+@scala[@extref[Akka Cluster Sample with Scala](samples:akka-samples-cluster-scala)]@java[@extref[Akka Cluster Sample with Java](samples:akka-samples-cluster-java)].
+It contains instructions on how to run the **Router Example with Group of Routees** sample.
+ 
 ## Router with Pool of Remote Deployed Routees
 
 ## 具有远程部署路由池的路由器
@@ -328,15 +322,6 @@ akka.actor.deployment {
   }
 }
 ```
-
-The easiest way to run **Router Example with Pool of Remote Deployed Routees** example yourself is to download the ready to run
-@scala[@extref[Akka Cluster Sample with Scala](ecs:akka-samples-cluster-scala)]
-@java[@extref[Akka Cluster Sample with Java](ecs:akka-samples-cluster-java)]
-together with the tutorial. It contains instructions on how to run the **Router Example with Pool of Remote Deployed Routees** sample.
-The source code of this sample can be found in the
-@scala[@extref[Akka Samples Repository](samples:akka-sample-cluster-scala)]@java[@extref[Akka Samples Repository](samples:akka-sample-cluster-java)].
-
-运行具有 **远程部署路由池的路由器** 示例的最简单方法是下载带有教程的
-@extref[Akka集群示例使用Scala](ecs:akka-samples-cluster-scala)。
-它包含有关如何运行具有 **远程部署路由池的路由器** 示例的说明。
-该示例的源代码可以在 @extref[Akka示例仓库](samples:akka-sample-cluster-scala) 中找到。
+The easiest way to run **Router Example with Pool of Routees** example yourself is to try the
+@scala[@extref[Akka Cluster Sample with Scala](samples:akka-samples-cluster-scala)]@java[@extref[Akka Cluster Sample with Java](samples:akka-samples-cluster-java)].
+It contains instructions on how to run the **Router Example with Pool of Routees** sample.

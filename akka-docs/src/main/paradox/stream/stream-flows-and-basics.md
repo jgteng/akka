@@ -464,7 +464,7 @@ by adding information to the flow graph that has been constructed up to this poi
 
 This means that everything that is inside the red bubble will be executed by one actor and everything outside of it
 by another. This scheme can be applied successively, always having one such boundary enclose the previous ones plus all
-operators that have been added since them.
+operators that have been added since then.
 
 这意味着红色气泡内的所有内容都将由一个actor执行，之外的所有都由另一个actor执行。该方案可以连续应用，
 总是有一个这样的边界包含先前的边界加上自那以后添加的所有操作符。

@@ -80,9 +80,9 @@ is convenient to use and has great performance.
 使用方便且性能优良。
 
 Between different services [Akka HTTP](https://doc.akka.io/docs/akka-http/current) or
-[Akka gRPC](https://developer.lightbend.com/docs/akka-grpc/current/) can be used for synchronous (yet non-blocking)
+[Akka gRPC](https://doc.akka.io/docs/akka-grpc/current/) can be used for synchronous (yet non-blocking)
 communication and [Akka Streams Kafka](https://doc.akka.io/docs/akka-stream-kafka/current/home.html) or other
-[Alpakka](https://developer.lightbend.com/docs/alpakka/current/) connectors for integration asynchronous communication.
+[Alpakka](https://doc.akka.io/docs/alpakka/current/) connectors for integration asynchronous communication.
 All those communication mechanisms work well with streaming of messages with end-to-end back-pressure, and the
 synchronous communication tools can also be used for single request response interactions. It is also important
 to note that when using these tools both sides of the communication do not have to be implemented with Akka,
@@ -167,18 +167,17 @@ akka {
   actor {
     provider = "cluster"
   }
-  remote {
-    log-remote-lifecycle-events = off
-    netty.tcp {
+  remote.artery {
+    canonical {
       hostname = "127.0.0.1"
-      port = 0
+      port = 2551
     }
   }
 
   cluster {
     seed-nodes = [
-      "akka.tcp://ClusterSystem@127.0.0.1:2551",
-      "akka.tcp://ClusterSystem@127.0.0.1:2552"]
+      "akka://ClusterSystem@127.0.0.1:2551",
+      "akka://ClusterSystem@127.0.0.1:2552"]
 
     # auto downing is NOT safe for production deployments.
     # you may want to use it during development, read more about it in the docs.
@@ -200,7 +199,7 @@ akka.extensions=["akka.cluster.metrics.ClusterMetricsExtension"]
 akka.cluster.metrics.native-library-extract-folder=${user.dir}/target/native
 ```
 
-To enable cluster capabilities in your Akka project you should, at a minimum, add the @ref:[Remoting](remoting.md)
+To enable cluster capabilities in your Akka project you should, at a minimum, add the @ref:[Remoting](remoting-artery.md)
 settings, but with `cluster`.
 The `akka.cluster.seed-nodes` should normally also be added to your `application.conf` file.
 
@@ -210,7 +209,7 @@ The `akka.cluster.seed-nodes` should normally also be added to your `application
 @@@ note
 
 If you are running Akka in a Docker container or the nodes for some other reason have separate internal and
-external ip addresses you must configure remoting according to @ref:[Akka behind NAT or in a Docker container](remoting.md#remote-configuration-nat)
+external ip addresses you must configure remoting according to @ref:[Akka behind NAT or in a Docker container](remoting-artery.md#remote-configuration-nat-artery)
 
 如果你在Docker容器中运行Akka或由于其它原因节点需要单独的内部和外部IP地址，
 则必须根据 @ref:[在NAT或Docker容器后面的Akka](remoting.md#remote-configuration-nat) 配置远程处理。
@@ -239,17 +238,9 @@ Java
 The actor registers itself as subscriber of certain cluster events. It receives events corresponding to the current state
 of the cluster when the subscription starts and then it receives events for changes that happen in the cluster.
 
-actor将自己注册为某些集群事件的订阅者。它在订阅开始时接收与集群的当前状态相对应的事件，然后还将收到集群变更（集群成员状态变化）的事件。
-
-The easiest way to run this example yourself is to download the ready to run
-@scala[@extref[Akka Cluster Sample with Scala](ecs:akka-samples-cluster-scala)]
-@java[@extref[Akka Cluster Sample with Java](ecs:akka-samples-cluster-java)]
-together with the tutorial. It contains instructions on how to run the `SimpleClusterApp`.
-The source code of this sample can be found in the
-@scala[@extref[Akka Samples Repository](samples:akka-sample-cluster-scala)]@java[@extref[Akka Samples Repository](samples:akka-sample-cluster-java)].
-
-运行此示例的最简单方式是下载 @extref[Akka集群示例使用Scala](ecs:akka-samples-cluster-scala)和教程。它包含有关如何运行`SimpleClusterApp`的说明。
-该示例的源码可在 @extref[Akka示例仓库](samples:akka-sample-cluster-scala)找到。
+The easiest way to run this example yourself is to try the
+@scala[@extref[Akka Cluster Sample with Scala](samples:akka-samples-cluster-scala)]@java[@extref[Akka Cluster Sample with Java](samples:akka-samples-cluster-java)].
+It contains instructions on how to run the `SimpleClusterApp`.
 
 ## Joining to Seed Nodes
 
@@ -258,11 +249,7 @@ The source code of this sample can be found in the
 @@@ note
   When starting clusters on cloud systems such as Kubernetes, AWS, Google Cloud, Azure, Mesos or others which maintain 
   DNS or other ways of discovering nodes, you may want to use the automatic joining process implemented by the open source
-  [Akka Cluster Bootstrap](https://developer.lightbend.com/docs/akka-management/current/bootstrap/index.html) module.
-
-  当在如Kubernates、AWS、Google云、Azure、Mesos、使用DNS或其它方式发现节点的云系统上启动集群时，
-  你可能希望使用[Akka Cluster Bootstrap](https://developer.lightbend.com/docs/akka-management/current/bootstrap/index.html)
-  模块来实现自动加入过程。
+  [Akka Cluster Bootstrap](https://doc.akka.io/docs/akka-management/current/bootstrap/index.html) module.
 @@@
 
 ### Joining configured seed nodes
@@ -290,8 +277,8 @@ You define the seed nodes in the [configuration](#cluster-configuration) file (a
 
 ```
 akka.cluster.seed-nodes = [
-  "akka.tcp://ClusterSystem@host1:2552",
-  "akka.tcp://ClusterSystem@host2:2552"]
+  "akka://ClusterSystem@host1:2552",
+  "akka://ClusterSystem@host2:2552"]
 ```
 
 This can also be defined as Java system properties when starting the JVM using the following syntax:
@@ -299,8 +286,8 @@ This can also be defined as Java system properties when starting the JVM using t
 在JVM应用启动时通过Java系统属性定义种子节点语法如下：
 
 ```
--Dakka.cluster.seed-nodes.0=akka.tcp://ClusterSystem@host1:2552
--Dakka.cluster.seed-nodes.1=akka.tcp://ClusterSystem@host2:2552
+-Dakka.cluster.seed-nodes.0=akka://ClusterSystem@host1:2552
+-Dakka.cluster.seed-nodes.1=akka://ClusterSystem@host2:2552
 ```
 
 The seed nodes can be started in any order and it is not necessary to have all
@@ -337,7 +324,7 @@ and don't stop all of them at the same time.
 Instead of manually configuring seed nodes, which is useful in development or statically assigned node IPs, you may want
 to automate the discovery of seed nodes using your cloud providers or cluster orchestrator, or some other form of service
 discovery (such as managed DNS). The open source Akka Management library includes the
-[Cluster Bootstrap](https://developer.lightbend.com/docs/akka-management/current/bootstrap/index.html) module which handles
+[Cluster Bootstrap](https://doc.akka.io/docs/akka-management/current/bootstrap/index.html) module which handles
 just that. Please refer to its documentation for more details.
 
 你可能希望使用云提供商的程序或集群协调程序或其它某种形式的服务发现（如托管DNS）自动发现种子节点，
@@ -784,16 +771,10 @@ unreachable cluster node has been downed and removed.
 使用集群故障检测器来检测集群中的节点，既除了正常的终止监视的actor之外，它还检测网络故障和JVM崩溃。当无法访问被关闭并删除后，
 Death watch将生成`Terminated`消息并发送给watching actor。
 
-The easiest way to run **Worker Dial-in Example** example yourself is to download the ready to run
-@scala[@extref[Akka Cluster Sample with Scala](ecs:akka-samples-cluster-scala)]
-@java[@extref[Akka Cluster Sample with Java](ecs:akka-samples-cluster-java)]
-together with the tutorial. It contains instructions on how to run the **Worker Dial-in Example** sample.
-The source code of this sample can be found in the
-@scala[@extref[Akka Samples Repository](samples:akka-sample-cluster-scala)]@java[@extref[Akka Samples Repository](samples:akka-sample-cluster-java)].
-
-运行 **Dial-in工作者示例** 的最简单方法是下载 @extref[Akka集群示例使用Scala](ecs:akka-samples-cluster-scala) 及教程，
-信有关如何运行 **Dial-in工作者示例** 的说明。该示例的源代码可以在 [Akka示例仓库](samples:akka-sample-cluster-scala)中找到。
-
+The easiest way to run **Worker Dial-in Example** example yourself is to try the
+@scala[@extref[Akka Cluster Sample with Scala](samples:akka-samples-cluster-scala)]@java[@extref[Akka Cluster Sample with Java](samples:akka-samples-cluster-java)].
+It contains instructions on how to run the **Worker Dial-in Example** sample.
+ 
 ## Node Roles
 
 ## 节点角色
@@ -1292,7 +1273,7 @@ Where the <node-url> should be on the format of
   'akka.<protocol>://<actor-system-name>@<hostname>:<port>'
 
 Examples: ./akka-cluster localhost 9999 is-available
-          ./akka-cluster localhost 9999 join akka.tcp://MySystem@darkstar:2552
+          ./akka-cluster localhost 9999 join akka://MySystem@darkstar:2552
           ./akka-cluster localhost 9999 cluster-status
 ```
 
@@ -1338,46 +1319,13 @@ akka.cluster.log-info-verbose = on
 
 ### 集群调度器
 
-Under the hood the cluster extension is implemented with actors and it can be necessary
-to create a bulkhead for those actors to avoid disturbance from other actors. Especially
-the heartbeating actors that is used for failure detection can generate false positives
-if they are not given a chance to run at regular intervals.
-For this purpose you can define a separate dispatcher to be used for the cluster actors:
+Under the hood the cluster extension is implemented with actors. To protect them against
+disturbance from user actors they are by default run on the internal dispatcher configured
+under `akka.actor.internal-dispatcher`. The cluster actors can potentially be isolated even
+further onto their own dispatcher using the setting `akka.cluster.use-dispatcher`.
 
 在幕后，集群扩展是由actor实现的，可能需要为这些actor创建一个隔板，以避免来自其他actor的干扰。
 特别是用于故障检测的心跳actor如果没有机会定期运行，就会产生误报。为此，你可以给集群actor定义一个单独的dispatcher：
-
-```
-akka.cluster.use-dispatcher = cluster-dispatcher
-
-cluster-dispatcher {
-  type = "Dispatcher"
-  executor = "fork-join-executor"
-  fork-join-executor {
-    parallelism-min = 2
-    parallelism-max = 4
-  }
-}
-```
-
-@@@ note
-
-Normally it should not be necessary to configure a separate dispatcher for the Cluster.
-The default-dispatcher should be sufficient for performing the Cluster tasks, i.e. `akka.cluster.use-dispatcher`
-should not be changed. If you have Cluster related problems when using the default-dispatcher that is typically an
-indication that you are running blocking or CPU intensive actors/tasks on the default-dispatcher.
-Use dedicated dispatchers for such actors/tasks instead of running them on the default-dispatcher,
-because that may starve system internal tasks.
-Related config properties: `akka.cluster.use-dispatcher = akka.cluster.cluster-dispatcher`.
-Corresponding default values: `akka.cluster.use-dispatcher =`.
-
-通常，没有必要为集群配置单独的dispatcher。默认dispatcher应足以执行Cluster任务，即不应更改`akka.cluster.use-dispatcher`。 
-如果在使用默认dispatcher时遇到与集群相关的问题，则通常表明你在默认dispatcher上运行阻塞或CPU密集型actor/任务。
-就使用专用调度程序来执行这些actor/tasks而不是在默认dispatcher上运行它们，因为这可能会使系统内部任务匮乏。
-相关配置属性：`akka.cluster.use-dispatcher = akka.cluster.cluster-dispatcher`。
-对应的默认值：`akka.cluster.use-dispatcher =`。
-
-@@@
 
 ### Configuration Compatibility Check
 
