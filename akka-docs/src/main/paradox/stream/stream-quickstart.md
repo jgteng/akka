@@ -53,6 +53,9 @@ And @scala[an object]@java[a class] to hold your code, for example:
 以及保存代码的对象，例如：
 
 
+以及保存代码的对象，例如：
+
+
 Scala
 :   @@snip [QuickStartDocSpec.scala](/akka-docs/src/test/scala/docs/stream/QuickStartDocSpec.scala) { #main-app }
 

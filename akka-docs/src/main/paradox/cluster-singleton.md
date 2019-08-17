@@ -13,6 +13,8 @@ For the new API see @ref[cluster-singleton](typed/cluster-singleton.md).
 
 # 集群单例
 
+# 集群单例
+
 ## Dependency
 
 To use Cluster Singleton, you must add the following dependency in your project:
