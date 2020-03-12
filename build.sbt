@@ -52,6 +52,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = List[ProjectReference](
   discovery,
   distributedData,
   docs,
+  docsZh,
   jackson,
   multiNodeTestkit,
   osgi,
@@ -208,6 +209,22 @@ lazy val docs = akkaModule("akka-docs")
     Jdk9)
   .disablePlugins(MimaPlugin, WhiteSourcePlugin)
   .disablePlugins(ScalafixPlugin)
+
+lazy val docsZh = akkaModule("akka-docs-zh")
+  .settings(Dependencies.docs)
+  .settings(Paradox.settings)
+  .settings(ParadoxSupport.paradoxWithCustomDirectives)
+  .enablePlugins(
+    AkkaParadoxPlugin,
+    DeployRsync,
+    NoPublish,
+    ParadoxBrowse,
+    ScaladocNoVerificationOfDiagrams,
+    StreamOperatorsIndexGenerator,
+    Jdk9)
+  .disablePlugins(MimaPlugin, WhiteSourcePlugin)
+  .disablePlugins(ScalafixPlugin)
+
 
 lazy val jackson = akkaModule("akka-serialization-jackson")
   .dependsOn(
