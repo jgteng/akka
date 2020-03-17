@@ -52,6 +52,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = List[ProjectReference](
   discovery,
   distributedData,
   docs,
+  docsZh,
   jackson,
   multiNodeTestkit,
   osgi,
@@ -208,6 +209,51 @@ lazy val docs = akkaModule("akka-docs")
     Jdk9)
   .disablePlugins(MimaPlugin, WhiteSourcePlugin)
   .disablePlugins(ScalafixPlugin)
+
+lazy val docsZh = akkaModule("akka-docs-zh")
+  .configs(akka.Jdk9.TestJdk9)
+  .dependsOn(
+    actor,
+    cluster,
+    clusterMetrics,
+    slf4j,
+    osgi,
+    persistenceTck,
+    persistenceQuery,
+    distributedData,
+    stream,
+    stream % "TestJdk9->CompileJdk9",
+    actorTyped,
+    clusterTools % "compile->compile;test->test",
+    clusterSharding % "compile->compile;test->test",
+    testkit % "compile->compile;test->test",
+    remote % "compile->compile;test->test",
+    persistence % "compile->compile;test->test",
+    actorTyped % "compile->compile;test->test",
+    persistenceTyped % "compile->compile;test->test",
+    clusterTyped % "compile->compile;test->test",
+    clusterShardingTyped % "compile->compile;test->test",
+    actorTypedTests % "compile->compile;test->test",
+    streamTestkit % "compile->compile;test->test")
+  .settings(Dependencies.docs)
+  .settings(Paradox.settings)
+  .settings(ParadoxSupport.paradoxWithCustomDirectives)
+  .enablePlugins(
+    GhpagesPlugin,
+    AkkaParadoxPlugin,
+    DeployRsync,
+    NoPublish,
+    ParadoxBrowse,
+    ScaladocNoVerificationOfDiagrams,
+    StreamOperatorsIndexGenerator,
+    Jdk9)
+  .disablePlugins(MimaPlugin, WhiteSourcePlugin)
+  .disablePlugins(ScalafixPlugin)
+  .settings(
+    git.remoteRepo := "https://github.com/yangbajing/akka.git",
+    ghpagesRepository := target.value / "paradox" / "site" / "main" ,
+    ghpagesNoJekyll := true
+  )
 
 lazy val jackson = akkaModule("akka-serialization-jackson")
   .dependsOn(

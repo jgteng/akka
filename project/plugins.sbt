@@ -25,3 +25,4 @@ addSbtPlugin("de.heikoseeberger" % "sbt-header" % "5.4.0") // for maintenance of
 addSbtPlugin("com.hpe.sbt" % "sbt-pull-request-validator" % "1.0.0")
 addSbtPlugin("net.bzzt" % "sbt-reproducible-builds" % "0.23")
 addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.0.0")
+addSbtPlugin("com.typesafe.sbt" % "sbt-ghpages" % "0.6.3")
