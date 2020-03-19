@@ -66,6 +66,8 @@ It does this through these references on the `Cluster` extension:
 * `subscriptions`: An @scala[`ActorRef[akka.cluster.typed.ClusterStateSubscription]`]@java[`ActorRef<akka.cluster.typed.ClusterStateSubscription>`] where a `ClusterStateSubscription` is one of `GetCurrentState` or `Subscribe` and `Unsubscribe` to cluster events like `MemberRemoved`
 * `state`: The current `CurrentClusterState`
 
+* `manager`: @scala[`ActorRef[akka.cluster.typed.ClusterCommand]`]@java[`ActorRef<akka.cluster.typed.ClusterCommand>`] 其中 `ClusterCommand` 是一个命令，例如：`Join`、`Leave` 和 `Down`
+
 All of the examples below assume the following imports:
 
 Scala

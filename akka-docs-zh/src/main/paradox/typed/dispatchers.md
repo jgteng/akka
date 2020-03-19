@@ -474,34 +474,52 @@ wraps a single DB connection and handles queries as sent to the router. The
 number N must then be tuned for maximum throughput, which will vary depending
 on which DBMS is deployed on what hardware.
 
+最后一种可能性很适合单线程的资源，像传统上只能一次执行一个未完成查询并使用内部同步来确保这点的数据库处理。
+一个常用模式是为 N 个 actor 创建一个路由（router），每个 actor 包装单个数据库连接并处理发送到路由的查询。
+然后，必需针对最大吞吐量对 N 进行调优，这将取决于在什么硬件上部署了哪种数据库系统。
+
 @@@ note
 
 Configuring thread pools is a task best delegated to Akka, configure
 it in `application.conf` and instantiate through an
 @ref:[`ActorSystem`](#dispatcher-lookup)
 
+最好是由 Akka 管理线程池配置，在 `application.conf` 中配置它，并通过一个 @ref:[`ActorSystem`](#dispatcher-lookup) 实例化。
+
 @@@
 
 ## More dispatcher configuration examples
+**更多 dispatcher 配置示例**
 
 ### Fixed pool size
+**固定池大小**
 
 Configuring a dispatcher with fixed thread pool size, e.g. for actors that perform blocking IO:
+
+配置具有固定线程池大小的 dispatcher，例如：actor 执行阻塞 IO：
 
 @@snip [DispatcherDocSpec.scala](/akka-docs/src/test/scala/docs/dispatcher/DispatcherDocSpec.scala) { #fixed-pool-size-dispatcher-config }
 
 ### Cores
+**核心数**
 
 Another example that uses the thread pool based on the number of cores (e.g. for CPU bound tasks)
+
+另一个示例基于核心数（例如：用于 CPU 绑定任务）使用线程池
 
 <!--same config text for Scala & Java-->
 @@snip [DispatcherDocSpec.scala](/akka-docs/src/test/scala/docs/dispatcher/DispatcherDocSpec.scala) {#my-thread-pool-dispatcher-config }
 
 ### Pinned
+**固定的**
 
 A separate thread is dedicated for each actor that is configured to use the pinned dispatcher.  
 
+一个单独的线程专用于每个被配置为使用固定 dispatcher 的 actor。 
+
 Configuring a `PinnedDispatcher`:
+
+配置一个 `PinnedDispatcher`：
 
 <!--same config text for Scala & Java-->
 @@snip [DispatcherDocSpec.scala](/akka-docs/src/test/scala/docs/dispatcher/DispatcherDocSpec.scala) {#my-pinned-dispatcher-config }
@@ -510,18 +528,28 @@ Note that `thread-pool-executor` configuration as per the above `my-thread-pool-
 NOT applicable. This is because every actor will have its own thread pool when using `PinnedDispatcher`,
 and that pool will have only one thread.
 
+注意，根据上述示例 `my-thread-pool-dispatcher` 配置 `thread-pool-executor` 是 **不** 适用的。
+这是因为当使用 `PinnedDispatcher` 时每个 actor 都将有它自己的线程池，并且（线程）池将只有一个线程。 
+
 Note that it's not guaranteed that the *same* thread is used over time, since the core pool timeout
 is used for `PinnedDispatcher` to keep resource usage down in case of idle actors. To use the same
 thread all the time you need to add `thread-pool-executor.allow-core-timeout=off` to the
 configuration of the `PinnedDispatcher`.
 
+注意，由于 `PinnedDispatcher` 使用了核心池超时，以在 actor 空闲时降低资源使用，因此它不能保证随着时间推移使用的是 *同一* 线程。若所有时间都使用同一线程，你需要添加 `thread-pool-executor.allow-core-timeout=off` 到 `PinnedDispatcher` 的配置里。
+
 ### Thread shutdown timeout
+**线程超时关闭**
 
 Both the `fork-join-executor` and `thread-pool-executor` may shutdown threads when they are not used.
 If it's desired to keep the threads alive longer there are some timeout settings that can be adjusted.
+
+当线程不在使用时，`fork-join-executor` 和 `thread-pool-executor` 可以关闭它们。如果希望线程保持较长的生存时间，可以调节一些超时设置。
 
 <!--same config text for Scala & Java-->
 @@snip [DispatcherDocSpec.scala](/akka-docs/src/test/scala/docs/dispatcher/DispatcherDocSpec.scala) {#my-dispatcher-with-timeouts-config }
  
 When using the dispatcher as an `ExecutionContext` without assigning actors to it the `shutdown-timeout` should
 typically be increased, since the default of 1 second may cause too frequent shutdown of the entire thread pool.
+
+当 dispatcher 作为 `ExecutionContext` 应用而不是用于分配置 actor 时，通常应该增加 `shutdown-timeout` ，因为默认的1秒可能导致整个线程池的关闭频率太高。
